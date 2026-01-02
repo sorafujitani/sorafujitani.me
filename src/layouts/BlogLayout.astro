@@ -109,7 +109,7 @@ const ogImage = new URL(image, siteUrl);
   .site-title {
     font-size: 20px;
     font-weight: 600;
-    color: var(--color-text);
+    color: var(--color-accent);
     text-decoration: none;
   }
 
@@ -138,5 +138,58 @@ const ogImage = new URL(image, siteUrl);
     margin: 0;
     color: var(--color-text-muted);
     font-size: 14px;
+  }
+
+  /* Footnotes */
+  :global(.footnotes) {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-border);
+    font-size: 14px;
+    color: var(--color-text-muted);
+  }
+
+  :global(.footnotes h2) {
+    display: none;
+  }
+
+  :global(.footnotes ol) {
+    padding-left: 20px;
+    margin: 0;
+  }
+
+  :global(.footnotes li) {
+    margin-bottom: 8px;
+  }
+
+  :global(.footnotes li p) {
+    margin: 0;
+    display: inline;
+  }
+
+  :global(.footnotes a) {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  :global(.footnotes a:hover) {
+    color: var(--color-accent-hover);
+  }
+
+  :global(.data-footnote-backref) {
+    margin-left: 4px;
+    text-decoration: none;
+  }
+
+  :global(sup a[data-footnote-ref]) {
+    color: var(--color-accent);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0 2px;
+  }
+
+  :global(sup a[data-footnote-ref]:hover) {
+    color: var(--color-accent-hover);
   }
 </style>

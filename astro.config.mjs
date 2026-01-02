@@ -1,12 +1,16 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
+import remarkGfm from 'remark-gfm';
 
 // https://astro.build/config
 export default defineConfig({
   site: 'https://sorafujitani.me',
-  integrations: [mdx()],
+  integrations: [mdx({
+    remarkPlugins: [remarkGfm],
+  })],
   markdown: {
+    remarkPlugins: [remarkGfm],
     shikiConfig: {
       theme: {
         name: 'custom-cyan-theme',
