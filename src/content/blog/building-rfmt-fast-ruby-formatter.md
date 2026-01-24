@@ -8,6 +8,14 @@ draft: false
 
 I'm building rfmt, a fast Ruby code formatter.
 
+## Links
+
+- GitHub: https://github.com/fs0414/rfmt
+- RubyGems: https://rubygems.org/gems/rfmt
+- DeepWiki: https://deepwiki.com/fs0414/rfmt
+
+If you find rfmt useful, please give it a star on GitHub!
+
 ## What is rfmt
 
 rfmt is a Ruby-specific code formatter that can be installed via bundler.
@@ -61,12 +69,6 @@ rfmt is approximately 6x faster.
 | 35 | ~4,200 | 122ms | 798ms | 6.57x |
 
 Typical formatting completes in 100-350ms. For larger Rails repositories, it finishes in about 500ms.
-
-## Links
-
-- GitHub: https://github.com/fs0414/rfmt
-- RubyGems: https://rubygems.org/gems/rfmt
-- DeepWiki: https://deepwiki.com/fs0414/rfmt
 
 ## Installation
 
