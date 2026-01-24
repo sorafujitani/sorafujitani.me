@@ -1,5 +1,9 @@
 ---
+import { getEntry } from 'astro:content';
 import BlogLayout from '@layouts/BlogLayout.astro';
+
+const about = await getEntry('about', 'index');
+const { Content } = await about.render();
 ---
 
 <BlogLayout title="About" description="Sora Fujitaniについて">
@@ -9,33 +13,8 @@ import BlogLayout from '@layouts/BlogLayout.astro';
       <h1>Sora Fujitani</h1>
     </section>
 
-    <section class="about-section">
-      <!-- <h2>About</h2> -->
-      <!-- <ul class="about-list"> -->
-      <!--   <li>Software engineer at a Japanese SaaS company</li> -->
-      <!--   <li>Contributing to OSS development</li> -->
-      <!--   <li>Writing Rust, TypeScript, and Ruby</li> -->
-      <!--   <li>Fan of Karin., a singer-songwriter</li> -->
-      <!-- </ul> -->
-      <p>工事中👷<p/>
-    </section>
-
-    <section class="about-section">
-      <h2>Links</h2>
-      <div class="social-links">
-        <a href="https://x.com/_fs0414" target="_blank" rel="noopener noreferrer" class="social-link">
-          X
-        </a>
-        <a href="https://github.com/fs0414" target="_blank" rel="noopener noreferrer" class="social-link">
-          GitHub
-        </a>
-        <a href="https://zenn.dev/soramarjr" target="_blank" rel="noopener noreferrer" class="social-link">
-          Zenn
-        </a>
-        <a href="https://youtrust.jp/users/fs0414" target="_blank" rel="noopener noreferrer" class="social-link">
-          YOUTRUST
-        </a>
-      </div>
+    <section class="about-content">
+      <Content />
     </section>
   </div>
 </BlogLayout>
@@ -65,51 +44,49 @@ import BlogLayout from '@layouts/BlogLayout.astro';
     color: var(--color-heading);
   }
 
-  .about-section {
-    margin-bottom: 48px;
+  .about-content {
+    font-size: 18px;
+    line-height: 1.8;
+    color: var(--color-text);
   }
 
-  .about-section h2 {
+  .about-content :global(h2) {
     font-size: 24px;
     font-weight: 600;
-    margin: 0 0 20px 0;
+    margin: 48px 0 20px 0;
     color: var(--color-heading);
     border-bottom: 1px solid var(--color-border);
     padding-bottom: 8px;
   }
 
-  .about-list {
-    font-size: 16px;
-    line-height: 1.8;
-    color: var(--color-text-secondary);
-    margin: 0;
-    padding-left: 20px;
-    list-style: disc;
+  .about-content :global(h3) {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 32px 0 16px 0;
+    color: var(--color-heading);
   }
 
-  .about-list li {
-    margin-bottom: 8px;
+  .about-content :global(p) {
+    margin: 0 0 24px 0;
   }
 
-  .social-links {
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
+  .about-content :global(ul),
+  .about-content :global(ol) {
+    margin: 0 0 24px 0;
+    padding-left: 24px;
   }
 
-  .social-link {
-    display: inline-block;
-    padding: 8px 16px;
-    background: var(--color-tag-bg);
-    color: var(--color-text-secondary);
+  .about-content :global(li) {
+    margin: 8px 0;
+  }
+
+  .about-content :global(a) {
+    color: var(--color-accent);
     text-decoration: none;
-    border-radius: 6px;
-    font-size: 15px;
-    transition: all 0.2s ease;
   }
 
-  .social-link:hover {
-    background: var(--color-accent);
-    color: var(--color-bg);
+  .about-content :global(a:hover) {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
   }
 </style>
