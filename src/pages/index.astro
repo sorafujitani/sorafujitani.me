@@ -19,10 +19,11 @@ const latestPosts = allPosts
           <h1>Sora Fujitani</h1>
           <ul class="bio">
             <li>Software engineer at a Japanese SaaS company</li>
-            <li>Contributing to OSS development</li>
             <li>Writing Rust, TypeScript, and Ruby</li>
-            <li>fan of Karin., a singer-songwriter</li>
+            <li>Contributing to OSS development</li>
+            <li>Fan of <a href="https://www.youtube.com/channel/UCB6Dl5at1tt6DE3CiUMehqQ" target="_blank" rel="noopener noreferrer" class="bio-link">Karin.</a>, a singer-songwriter</li>
           </ul>
+          <a href="/about" class="detail-link">More about me →</a>
         </div>
       </div>
 
@@ -109,6 +110,29 @@ const latestPosts = allPosts
 
   .bio li {
     margin-bottom: 4px;
+  }
+
+  .bio-link {
+    color: var(--color-accent);
+    text-decoration: none;
+  }
+
+  .bio-link:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+  }
+
+  .detail-link {
+    display: inline-block;
+    margin-top: 12px;
+    color: #00d8ff;
+    text-decoration: none;
+    font-size: 14px;
+  }
+
+  .detail-link:hover {
+    color: #5ce6ff;
+    text-decoration: underline;
   }
 
   .social-links {

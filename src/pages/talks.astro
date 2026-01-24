@@ -1,0 +1,193 @@
+---
+import { getCollection } from 'astro:content';
+import BlogLayout from '../layouts/BlogLayout.astro';
+
+// SpeakerDeckのURLからOG画像を自動取得
+async function fetchOgImage(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    const html = await res.text();
+    const match = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/);
+    return match ? match[1] : null;
+  } catch {
+    return null;
+  }
+}
+
+// サムネイルを解決（手動指定 > SpeakerDeck自動取得）
+async function resolveThumbnail(slide?: string, thumbnail?: string): Promise<string | undefined> {
+  if (thumbnail) return thumbnail;
+  if (slide?.includes('speakerdeck.com')) {
+    return await fetchOgImage(slide) || undefined;
+  }
+  return undefined;
+}
+
+const talksCollection = await getCollection('talks');
+
+// サムネイルを解決して日付順にソート
+const talks = await Promise.all(
+  talksCollection.map(async (talk) => ({
+    ...talk,
+    thumbnail: await resolveThumbnail(talk.data.slide, talk.data.thumbnail),
+  }))
+);
+
+talks.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+---
+
+<BlogLayout title="Talks" description="Sora Fujitaniの登壇履歴">
+  <div class="talks-container">
+    <h1>Talks</h1>
+    <p class="description">Past presentations and talks.</p>
+
+    {talks.length > 0 ? (
+      <div class="talks-list">
+        {talks.map(async (talk) => {
+          const { Content } = await talk.render();
+          return (
+            <article class="talk-card">
+              {talk.thumbnail && (
+                <a href={talk.data.slide || talk.data.video || '#'} target="_blank" rel="noopener noreferrer" class="thumbnail-link">
+                  <img src={talk.thumbnail} alt={talk.data.title} class="thumbnail" />
+                </a>
+              )}
+              <div class="talk-content">
+                <time datetime={talk.data.date.toISOString()}>
+                  {talk.data.date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                </time>
+                <h2>{talk.data.title}</h2>
+                {talk.data.event && <p class="event">{talk.data.event}</p>}
+                <div class="talk-description">
+                  <Content />
+                </div>
+                <div class="links">
+                  {talk.data.slide && (
+                    <a href={talk.data.slide} target="_blank" rel="noopener noreferrer" class="link-button">
+                      Slides
+                    </a>
+                  )}
+                  {talk.data.video && (
+                    <a href={talk.data.video} target="_blank" rel="noopener noreferrer" class="link-button">
+                      Video
+                    </a>
+                  )}
+                </div>
+              </div>
+            </article>
+          );
+        })}
+      </div>
+    ) : (
+      <p class="empty">Coming soon...</p>
+    )}
+  </div>
+</BlogLayout>
+
+<style>
+  .talks-container {
+    max-width: 680px;
+  }
+
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: var(--color-heading);
+  }
+
+  .description {
+    color: var(--color-text-muted);
+    margin: 0 0 48px 0;
+  }
+
+  .talks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+
+  .talk-card {
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .talk-card:last-child {
+    border-bottom: none;
+  }
+
+  .thumbnail-link {
+    display: block;
+    margin-bottom: 16px;
+  }
+
+  .thumbnail {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--color-border);
+    transition: opacity 0.2s ease;
+  }
+
+  .thumbnail:hover {
+    opacity: 0.8;
+  }
+
+  .talk-content time {
+    display: block;
+    font-size: 14px;
+    color: var(--color-text-muted);
+    margin-bottom: 8px;
+  }
+
+  .talk-content h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: var(--color-heading);
+  }
+
+  .event {
+    font-size: 15px;
+    color: var(--color-text-secondary);
+    margin: 0 0 12px 0;
+  }
+
+  .talk-description {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    margin: 0 0 16px 0;
+    line-height: 1.6;
+  }
+
+  .talk-description :global(p) {
+    margin: 0;
+  }
+
+  .links {
+    display: flex;
+    gap: 12px;
+  }
+
+  .link-button {
+    display: inline-block;
+    padding: 6px 14px;
+    background: var(--color-tag-bg);
+    color: var(--color-accent);
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  .link-button:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+
+  .empty {
+    color: var(--color-text-muted);
+    font-style: italic;
+  }
+</style>
