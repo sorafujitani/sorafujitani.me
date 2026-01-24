@@ -1,6 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
-import BlogLayout from '../layouts/BlogLayout.astro';
+import BlogLayout from '@layouts/BlogLayout.astro';
 
 // SpeakerDeckのURLからOG画像を自動取得
 async function fetchOgImage(url: string): Promise<string | null> {

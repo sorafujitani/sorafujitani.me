@@ -1,10 +1,7 @@
 ---
-interface Props {
-  title: string;
-  description: string;
-  pubDate: Date;
-  slug: string;
-}
+import type { BlogCardProps } from '@types';
+
+type Props = BlogCardProps;
 
 const { title, description, pubDate, slug } = Astro.props;
 

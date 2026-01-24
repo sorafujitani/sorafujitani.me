@@ -2,38 +2,8 @@
 import { defineConfig } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import remarkGfm from 'remark-gfm';
-import { visit } from 'unist-util-visit';
-
-/** @returns {import('unified').Plugin} */
-function remarkCodeFilename() {
-  return (tree) => {
-    visit(tree, 'code', (node) => {
-      if (node.lang && node.lang.includes(':')) {
-        const parts = node.lang.split(':');
-        node.lang = parts[0];
-        node.meta = (node.meta || '') + ` filename="${parts.slice(1).join(':')}"`;
-      }
-    });
-  };
-}
-
-/** @type {import('shiki').ShikiTransformer} */
-const transformerFilename = () => ({
-  name: 'transformer-filename',
-  preprocess(code, options) {
-    const meta = options.meta?.__raw || '';
-    const match = meta.match(/filename="([^"]+)"/);
-    if (match) {
-      this.filename = match[1];
-    }
-    return code;
-  },
-  pre(node) {
-    if (this.filename) {
-      node.properties['data-filename'] = this.filename;
-    }
-  },
-});
+import { remarkCodeFilename } from './src/lib/remark/code-filename.ts';
+import { transformerFilename } from './src/lib/shiki/filename-transformer.ts';
 
 // https://astro.build/config
 export default defineConfig({
