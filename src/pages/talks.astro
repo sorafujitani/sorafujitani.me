@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import BlogLayout from '@layouts/BlogLayout.astro';
 
-// SpeakerDeckのURLからOG画像を自動取得
+// スライドURLからOG画像を自動取得
 async function fetchOgImage(url: string): Promise<string | null> {
   try {
     const res = await fetch(url);
@@ -14,10 +14,10 @@ async function fetchOgImage(url: string): Promise<string | null> {
   }
 }
 
-// サムネイルを解決（手動指定 > SpeakerDeck自動取得）
+// サムネイルを解決（手動指定 > スライドURLからOG画像自動取得）
 async function resolveThumbnail(slide?: string, thumbnail?: string): Promise<string | undefined> {
   if (thumbnail) return thumbnail;
-  if (slide?.includes('speakerdeck.com')) {
+  if (slide) {
     return await fetchOgImage(slide) || undefined;
   }
   return undefined;
