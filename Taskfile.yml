@@ -1,0 +1,23 @@
+version: "3"
+
+tasks:
+  dev:
+    desc: Start dev server
+    cmd: bun run astro dev
+
+  build:
+    desc: Build for production
+    cmd: bun run astro build
+
+  preview:
+    desc: Preview production build
+    cmd: bun run astro preview
+
+  post:
+    desc: Create a new blog post
+    cmd: bun run scripts/new-post.ts {{.CLI_ARGS}}
+
+  deploy:
+    desc: Deploy to Cloudflare Pages
+    deps: [build]
+    cmd: bunx wrangler pages deploy dist

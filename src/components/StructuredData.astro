@@ -13,8 +13,10 @@ export interface Props {
   breadcrumbs?: { name: string; url: string }[];
 }
 
+import { SITE_URL, SITE_NAME } from '@lib/constants';
+
 const { type, title, description, publishedDate, updatedDate, author, image, url, breadcrumbs } = Astro.props;
-const siteUrl = Astro.site?.toString() || 'https://sorafujitani.me';
+const siteUrl = Astro.site?.toString() || SITE_URL;
 
 function generateArticleSchema() {
   return {
@@ -27,12 +29,12 @@ function generateArticleSchema() {
     dateModified: (updatedDate || publishedDate)?.toISOString(),
     author: {
       '@type': 'Person',
-      name: author || 'Sora Fujitani',
+      name: author || SITE_NAME,
       url: siteUrl,
     },
     publisher: {
       '@type': 'Person',
-      name: 'Sora Fujitani',
+      name: SITE_NAME,
       url: siteUrl,
     },
     mainEntityOfPage: {
@@ -46,11 +48,11 @@ function generateWebSiteSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'Sora Fujitani',
+    name: SITE_NAME,
     url: siteUrl,
     author: {
       '@type': 'Person',
-      name: 'Sora Fujitani',
+      name: SITE_NAME,
     },
   };
 }
