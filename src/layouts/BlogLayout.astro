@@ -54,6 +54,7 @@ const ogImage = new URL(image, siteUrl);
     <div class="container">
       <header>
         <a href="/" class="site-title">sorafujitani.me</a>
+        <button class="menu-toggle" aria-label="Menu"><span /></button>
         <div class="header-right">
           <nav>
             <a href="/blog">Blog</a>
@@ -90,6 +91,17 @@ const ogImage = new URL(image, siteUrl);
     </div>
   </body>
 </html>
+
+<script>
+  const toggle = document.querySelector('.menu-toggle');
+  const header = document.querySelector('header');
+  if (toggle && header) {
+    toggle.addEventListener('click', () => header.classList.toggle('open'));
+    header.querySelectorAll('nav a').forEach((a) => {
+      a.addEventListener('click', () => header.classList.remove('open'));
+    });
+  }
+</script>
 
 <style>
   .container {
@@ -165,5 +177,101 @@ const ogImage = new URL(image, siteUrl);
 
   .footer-icons a:hover {
     color: var(--color-accent);
+  }
+
+  .menu-toggle {
+    display: none;
+  }
+
+  @media (max-width: 768px) {
+    header {
+      flex-wrap: wrap;
+    }
+
+    .menu-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+
+    .menu-toggle span,
+    .menu-toggle span::before,
+    .menu-toggle span::after {
+      display: block;
+      width: 18px;
+      height: 2px;
+      background: var(--color-text-muted);
+      border-radius: 1px;
+      transition: all 0.2s ease;
+    }
+
+    .menu-toggle span {
+      position: relative;
+    }
+
+    .menu-toggle span::before,
+    .menu-toggle span::after {
+      content: '';
+      position: absolute;
+      left: 0;
+    }
+
+    .menu-toggle span::before {
+      top: -6px;
+    }
+
+    .menu-toggle span::after {
+      top: 6px;
+    }
+
+    header.open .menu-toggle span {
+      background: transparent;
+    }
+
+    header.open .menu-toggle span::before {
+      top: 0;
+      transform: rotate(45deg);
+    }
+
+    header.open .menu-toggle span::after {
+      top: 0;
+      transform: rotate(-45deg);
+    }
+
+    .header-right {
+      display: none;
+      width: 100%;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      padding-top: 16px;
+    }
+
+    header.open .header-right {
+      display: flex;
+    }
+
+    nav {
+      flex-direction: column;
+      gap: 0;
+      width: 100%;
+    }
+
+    nav a {
+      display: block;
+      padding: 10px 0;
+      font-size: 16px;
+      border-bottom: 1px solid var(--color-border);
+    }
+
+    nav a:last-child {
+      border-bottom: none;
+    }
   }
 </style>
