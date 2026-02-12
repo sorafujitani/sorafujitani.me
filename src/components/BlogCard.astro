@@ -1,15 +1,12 @@
 ---
 import type { BlogCardProps } from '@types';
+import { formatDate } from '@lib/date';
 
 type Props = BlogCardProps;
 
 const { title, description, pubDate, slug } = Astro.props;
 
-const formattedDate = new Intl.DateTimeFormat('ja-JP', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-}).format(pubDate);
+const formattedDate = formatDate(pubDate);
 ---
 
 <article class="blog-card">

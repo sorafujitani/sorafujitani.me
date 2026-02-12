@@ -1,13 +1,10 @@
 ---
-import { getCollection } from 'astro:content';
 import BlogLayout from '@layouts/BlogLayout.astro';
 import BlogCard from '@components/BlogCard.astro';
+import { getPublishedPosts } from '@lib/posts';
 
-const allPosts = await getCollection('blog');
-const latestPosts = allPosts
-  .filter(post => !post.data.draft)
-  .sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime())
-  .slice(0, 5);
+const allPosts = await getPublishedPosts();
+const latestPosts = allPosts.slice(0, 5);
 ---
 
 <BlogLayout title="Home" description="sora fujitani portfolio site">

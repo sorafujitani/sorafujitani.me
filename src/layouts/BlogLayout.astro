@@ -11,7 +11,9 @@ interface Props {
 
 const { title, description, image = '/profile.png' } = Astro.props;
 const isHomePage = Astro.url.pathname === '/';
-const siteUrl = Astro.site || 'https://sorafujitani.me';
+import { SITE_URL, SITE_NAME } from '@lib/constants';
+
+const siteUrl = Astro.site || SITE_URL;
 const canonicalURL = new URL(Astro.url.pathname, siteUrl);
 const ogImage = new URL(image, siteUrl);
 ---
@@ -21,7 +23,7 @@ const ogImage = new URL(image, siteUrl);
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>{title} | Sora Fujitani</title>
+    <title>{title} | {SITE_NAME}</title>
     {description && <meta name="description" content={description} />}
     <link rel="icon" type="image/png" href="/favicon.png" />
 
@@ -34,14 +36,14 @@ const ogImage = new URL(image, siteUrl);
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content={canonicalURL} />
-    <meta property="og:title" content={`${title} | Sora Fujitani`} />
+    <meta property="og:title" content={`${title} | ${SITE_NAME}`} />
     {description && <meta property="og:description" content={description} />}
     <meta property="og:image" content={ogImage} />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content={canonicalURL} />
-    <meta property="twitter:title" content={`${title} | Sora Fujitani`} />
+    <meta property="twitter:title" content={`${title} | ${SITE_NAME}`} />
     {description && <meta property="twitter:description" content={description} />}
     <meta property="twitter:image" content={ogImage} />
 
@@ -56,6 +58,7 @@ const ogImage = new URL(image, siteUrl);
           <nav>
             <a href="/blog">Blog</a>
             <a href="/talks">Talks</a>
+            <a href="/pulls">Pulls</a>
             <a href="/about">About</a>
           </nav>
           <Search />
@@ -82,7 +85,7 @@ const ogImage = new URL(image, siteUrl);
             </svg>
           </a>
         </div>
-        <p>&copy; 2025 Sora Fujitani</p>
+        <p>&copy; {new Date().getFullYear()} {SITE_NAME}</p>
       </footer>
     </div>
   </body>

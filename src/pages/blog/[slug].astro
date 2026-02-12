@@ -21,16 +21,13 @@ interface Props {
 const { post } = Astro.props;
 const { Content, headings } = await post.render();
 
-const siteUrl = Astro.site || 'https://sorafujitani.me';
+import { formatDate } from '@lib/date';
+import { SITE_URL } from '@lib/constants';
+
+const siteUrl = Astro.site || SITE_URL;
 const postUrl = new URL(`/blog/${post.slug}`, siteUrl).toString();
 const encodedUrl = encodeURIComponent(postUrl);
 const encodedTitle = encodeURIComponent(post.data.title);
-
-const formatDate = (date: Date) => new Intl.DateTimeFormat('ja-JP', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-}).format(date);
 
 const formattedDate = formatDate(post.data.pubDate);
 const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.updatedDate) : null;

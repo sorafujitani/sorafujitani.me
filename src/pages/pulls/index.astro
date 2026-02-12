@@ -1,0 +1,328 @@
+---
+import BlogLayout from '@layouts/BlogLayout.astro';
+import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS } from '@lib/constants';
+---
+
+<BlogLayout title="Pulls" description="GitHub Pull Requests by Sora Fujitani">
+  <div class="pulls-container">
+    <h1>Pulls</h1>
+    <p class="description">Public GitHub Pull Requests.</p>
+
+    <div id="pulls-loading" class="skeleton-list">
+      {Array.from({ length: 5 }).map(() => (
+        <div class="skeleton-card">
+          <div class="skeleton-header">
+            <div class="skeleton-avatar" />
+            <div class="skeleton-repo" />
+          </div>
+          <div class="skeleton-title" />
+          <div class="skeleton-meta" />
+        </div>
+      ))}
+    </div>
+
+    <div id="pulls-error" class="error-state" style="display:none;">
+      <p>Failed to load pull requests.</p>
+      <button id="retry-btn" class="retry-button">Retry</button>
+    </div>
+
+    <div id="pulls-list" style="display:none;"></div>
+  </div>
+</BlogLayout>
+
+<script define:vars={{ GITHUB_USERNAME, PULLS_HIDDEN_REPOS }}>
+  const API_URL = `https://api.github.com/search/issues?q=type:pr+author:${GITHUB_USERNAME}+is:public&sort=created&order=desc&per_page=50`;
+
+  function relativeTime(dateStr) {
+    const now = Date.now();
+    const diff = now - new Date(dateStr).getTime();
+    const sec = Math.floor(diff / 1000);
+    const min = Math.floor(sec / 60);
+    const hour = Math.floor(min / 60);
+    const day = Math.floor(hour / 24);
+    const month = Math.floor(day / 30);
+    const year = Math.floor(day / 365);
+
+    if (year > 0) return `${year}年前`;
+    if (month > 0) return `${month}ヶ月前`;
+    if (day > 0) return `${day}日前`;
+    if (hour > 0) return `${hour}時間前`;
+    if (min > 0) return `${min}分前`;
+    return 'たった今';
+  }
+
+  function extractRepo(htmlUrl) {
+    const m = htmlUrl.match(/github\.com\/([^/]+\/[^/]+)\//);
+    return m ? m[1] : '';
+  }
+
+  function prStatus(pr) {
+    if (pr.pull_request?.merged_at) return 'merged';
+    if (pr.state === 'open') return 'open';
+    return 'closed';
+  }
+
+  function statusLabel(status) {
+    if (status === 'merged') return 'Merged';
+    if (status === 'open') return 'Open';
+    return 'Closed';
+  }
+
+  function renderCard(pr) {
+    const repo = extractRepo(pr.html_url);
+    const owner = repo.split('/')[0];
+    const status = prStatus(pr);
+    const number = pr.number;
+    const avatarUrl = `https://github.com/${owner}.png?size=40`;
+
+    const card = document.createElement('article');
+    card.className = 'pr-card';
+
+    card.innerHTML = `
+      <div class="pr-header">
+        <img src="${avatarUrl}" alt="${owner}" class="pr-avatar" width="20" height="20" loading="lazy" />
+        <a href="https://github.com/${repo}" target="_blank" rel="noopener noreferrer" class="pr-repo">${repo}</a>
+        <span class="pr-badge pr-badge--${status}">${statusLabel(status)}</span>
+      </div>
+      <a href="${pr.html_url}" target="_blank" rel="noopener noreferrer" class="pr-title">
+        ${pr.title} <span class="pr-number">#${number}</span>
+      </a>
+      <time class="pr-time" datetime="${pr.created_at}">${relativeTime(pr.created_at)}</time>
+    `;
+
+    return card;
+  }
+
+  async function fetchPulls() {
+    const loading = document.getElementById('pulls-loading');
+    const error = document.getElementById('pulls-error');
+    const list = document.getElementById('pulls-list');
+
+    loading.style.display = '';
+    error.style.display = 'none';
+    list.style.display = 'none';
+
+    try {
+      const res = await fetch(API_URL);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+
+      const hiddenSet = new Set(PULLS_HIDDEN_REPOS);
+      const items = data.items.filter((pr) => {
+        const repo = extractRepo(pr.html_url);
+        return !hiddenSet.has(repo);
+      });
+
+      list.innerHTML = '';
+      items.forEach((pr) => list.appendChild(renderCard(pr)));
+
+      loading.style.display = 'none';
+      list.style.display = '';
+    } catch (e) {
+      console.error('Failed to fetch pulls:', e);
+      loading.style.display = 'none';
+      error.style.display = '';
+    }
+  }
+
+  document.getElementById('retry-btn').addEventListener('click', fetchPulls);
+  fetchPulls();
+</script>
+
+<style>
+  .pulls-container {
+    max-width: 680px;
+  }
+
+  h1 {
+    font-size: 36px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    color: var(--color-heading);
+  }
+
+  .description {
+    color: var(--color-text-muted);
+    margin: 0 0 48px 0;
+  }
+
+  /* Skeleton */
+  .skeleton-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .skeleton-card {
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .skeleton-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .skeleton-avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--color-border);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .skeleton-repo {
+    width: 160px;
+    height: 14px;
+    border-radius: 4px;
+    background: var(--color-border);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .skeleton-title {
+    width: 80%;
+    height: 18px;
+    border-radius: 4px;
+    background: var(--color-border);
+    margin-bottom: 8px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  .skeleton-meta {
+    width: 60px;
+    height: 12px;
+    border-radius: 4px;
+    background: var(--color-border);
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+
+  /* Error */
+  .error-state {
+    text-align: center;
+    padding: 48px 0;
+    color: var(--color-text-muted);
+  }
+
+  .error-state p {
+    margin: 0 0 16px 0;
+  }
+
+  .retry-button {
+    padding: 8px 20px;
+    background: var(--color-tag-bg);
+    color: var(--color-accent);
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .retry-button:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+  }
+
+  /* PR Cards (dynamic elements) */
+  #pulls-list {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  #pulls-list :global(.pr-card) {
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  #pulls-list :global(.pr-card:last-child) {
+    border-bottom: none;
+  }
+
+  #pulls-list :global(.pr-header) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  #pulls-list :global(.pr-avatar) {
+    border-radius: 50%;
+  }
+
+  #pulls-list :global(.pr-repo) {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  #pulls-list :global(.pr-repo:hover) {
+    color: var(--color-accent);
+  }
+
+  #pulls-list :global(.pr-badge) {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: auto;
+  }
+
+  #pulls-list :global(.pr-badge--merged) {
+    background: rgba(163, 113, 247, 0.15);
+    color: #a371f7;
+  }
+
+  #pulls-list :global(.pr-badge--open) {
+    background: rgba(63, 185, 80, 0.15);
+    color: #3fb950;
+  }
+
+  #pulls-list :global(.pr-badge--closed) {
+    background: rgba(248, 81, 73, 0.15);
+    color: #f85149;
+  }
+
+  #pulls-list :global(.pr-title) {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-heading);
+    text-decoration: none;
+    margin-bottom: 4px;
+    line-height: 1.4;
+  }
+
+  #pulls-list :global(.pr-title:hover) {
+    color: var(--color-accent);
+  }
+
+  #pulls-list :global(.pr-number) {
+    font-weight: 400;
+    color: var(--color-text-muted);
+    font-size: 16px;
+  }
+
+  #pulls-list :global(.pr-time) {
+    display: block;
+    font-size: 13px;
+    color: var(--color-text-muted);
+  }
+
+  @media (max-width: 768px) {
+    #pulls-list :global(.pr-title) {
+      font-size: 16px;
+    }
+
+    .skeleton-title {
+      width: 100%;
+    }
+  }
+</style>
