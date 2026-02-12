@@ -202,6 +202,9 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS } fro
 
     try {
       const res = await fetch(buildUrl(currentPage));
+      if (res.status === 403 || res.status === 429) {
+        throw new Error('rate_limit');
+      }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
 
@@ -222,6 +225,9 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS } fro
     } catch (e) {
       console.error('Failed to fetch pulls:', e);
       loading.style.display = 'none';
+      error.querySelector('p').textContent = e.message === 'rate_limit'
+        ? 'API rate limit exceeded. Please wait a moment.'
+        : 'Failed to load pull requests.';
       error.style.display = '';
     }
   }
@@ -242,8 +248,7 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS } fro
     fetchPulls(1);
   });
 
-  fetchPulls(1);
-  fetchRepos();
+  fetchPulls(1).then(() => fetchRepos());
 </script>
 
 <style>
