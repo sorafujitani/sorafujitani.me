@@ -127,7 +127,6 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS } fro
       <a href="${pr.html_url}" target="_blank" rel="noopener noreferrer" class="pr-title">
         ${pr.title} <span class="pr-number">#${number}</span>
       </a>
-      <time class="pr-time" datetime="${pr.created_at}">${relativeTime(pr.created_at)}</time>
     `;
 
     return card;
