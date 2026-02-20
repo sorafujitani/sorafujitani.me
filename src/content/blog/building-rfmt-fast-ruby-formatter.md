@@ -10,9 +10,9 @@ I'm building rfmt, a fast Ruby code formatter.
 
 ## Links
 
-- GitHub: https://github.com/fs0414/rfmt
+- GitHub: https://github.com/sorafujitani/rfmt
 - RubyGems: https://rubygems.org/gems/rfmt
-- DeepWiki: https://deepwiki.com/fs0414/rfmt
+- DeepWiki: https://deepwiki.com/sorafujitani/rfmt
 
 If you find rfmt useful, please give it a star on GitHub!
 
@@ -69,7 +69,7 @@ In my environment, formatting typically completes in 100ms-350ms, and even for f
 The benchmark comparison is summarized in the file below.
 The results show that rfmt is approximately 6x faster in average cases, and memory efficiency is about 1/6.
 
-https://github.com/fs0414/rfmt/blob/main/docs/benchmark.md
+https://github.com/sorafujitani/rfmt/blob/main/docs/benchmark.md
 
 ## Usage
 
