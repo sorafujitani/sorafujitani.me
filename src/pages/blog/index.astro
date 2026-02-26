@@ -14,6 +14,7 @@ const sortedPosts = await getPublishedPosts();
         description={post.data.description}
         pubDate={post.data.pubDate}
         slug={post.slug}
+        externalUrl={post.data.externalUrl}
       />
     ))}
   </div>

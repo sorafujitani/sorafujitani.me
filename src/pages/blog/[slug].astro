@@ -8,10 +8,12 @@ import TableOfContents from './_components/TableOfContents.astro';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
-  return posts.map(post => ({
-    params: { slug: post.slug },
-    props: { post },
-  }));
+  return posts
+    .filter(post => !post.data.externalUrl)
+    .map(post => ({
+      params: { slug: post.slug },
+      props: { post },
+    }));
 }
 
 interface Props {

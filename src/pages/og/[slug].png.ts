@@ -5,10 +5,12 @@ import { Resvg } from '@resvg/resvg-js';
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const posts = await getCollection('blog');
-  return posts.map((post) => ({
-    params: { slug: post.slug },
-    props: { title: post.data.title, tags: post.data.tags || [] },
-  }));
+  return posts
+    .filter(post => !post.data.externalUrl)
+    .map((post) => ({
+      params: { slug: post.slug },
+      props: { title: post.data.title, tags: post.data.tags || [] },
+    }));
 };
 
 export const GET: APIRoute = async ({ props }) => {

@@ -4,18 +4,60 @@ import { formatDate } from '@lib/date';
 
 type Props = BlogCardProps;
 
-const { title, description, pubDate, slug } = Astro.props;
+const { title, description, pubDate, slug, externalUrl } = Astro.props;
 
 const formattedDate = formatDate(pubDate);
+
+const href = externalUrl || `/blog/${slug}/`;
+const isExternal = !!externalUrl;
+
+function getMediaName(url: string): string {
+  try {
+    const hostname = new URL(url).hostname;
+    if (hostname.includes('zenn.dev')) return 'Zenn';
+    if (hostname.includes('qiita.com')) return 'Qiita';
+    if (hostname.includes('note.com')) return 'note';
+    if (hostname.includes('medium.com')) return 'Medium';
+    if (hostname.includes('dev.to')) return 'DEV';
+    return hostname.replace('www.', '');
+  } catch {
+    return 'External';
+  }
+}
+
+const mediaName = isExternal ? getMediaName(externalUrl!) : null;
 ---
 
 <article class="blog-card">
-  <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+  <div class="blog-card-meta">
+    <time datetime={pubDate.toISOString()}>{formattedDate}</time>
+    {isExternal && mediaName && (
+      <span class="external-badge">{mediaName}</span>
+    )}
+  </div>
   <h2>
-    <a href={`/blog/${slug}/`}>{title}</a>
+    <a
+      href={href}
+      {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+    >
+      {title}
+      {isExternal && (
+        <svg class="external-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+      )}
+    </a>
   </h2>
   <p class="description">{description}</p>
-  <a href={`/blog/${slug}/`} class="read-more">続きを読む →</a>
+  <a
+    href={href}
+    class="read-more"
+    {...(isExternal ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+  >
+    {isExternal ? `${mediaName}で読む` : '続きを読む'} →
+  </a>
 </article>
 
 <style>
@@ -28,11 +70,27 @@ const formattedDate = formatDate(pubDate);
     border-bottom: none;
   }
 
+  .blog-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
   time {
-    display: block;
     font-size: 14px;
     color: var(--color-text-muted);
-    margin-bottom: 8px;
+  }
+
+  .external-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(0, 216, 255, 0.15);
+    border: 1px solid rgba(0, 216, 255, 0.3);
+    border-radius: 4px;
+    font-size: 12px;
+    color: var(--color-accent);
+    font-weight: 500;
   }
 
   h2 {
@@ -49,6 +107,13 @@ const formattedDate = formatDate(pubDate);
 
   h2 a:hover {
     color: var(--color-accent);
+  }
+
+  .external-icon {
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 4px;
+    opacity: 0.5;
   }
 
   .description {

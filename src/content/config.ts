@@ -17,6 +17,7 @@ const blogCollection = defineCollection({
     author: z.string().default('Sora Fujitani'),
     tags: z.array(z.string()).optional(),
     draft: z.boolean().default(false),
+    externalUrl: z.string().url().optional(),
   }),
 });
 

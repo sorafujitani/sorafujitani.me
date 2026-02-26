@@ -9,6 +9,7 @@ const searchData = posts
     description: post.data.description,
     slug: post.slug,
     tags: post.data.tags || [],
+    externalUrl: post.data.externalUrl || null,
   }));
 ---
 
@@ -80,12 +81,17 @@ const searchData = posts
       return;
     }
 
-    results.innerHTML = matches.map(post => `
-      <a href="/blog/${post.slug}/" class="search-result">
-        <span class="result-title">${post.title}</span>
-        <span class="result-description">${post.description}</span>
-      </a>
-    `).join('');
+    results.innerHTML = matches.map(post => {
+      const href = post.externalUrl || `/blog/${post.slug}/`;
+      const targetAttr = post.externalUrl ? ' target="_blank" rel="noopener noreferrer"' : '';
+      const externalIcon = post.externalUrl ? ' <span style="font-size:11px;opacity:0.6">↗</span>' : '';
+      return `
+        <a href="${href}" class="search-result"${targetAttr}>
+          <span class="result-title">${post.title}${externalIcon}</span>
+          <span class="result-description">${post.description}</span>
+        </a>
+      `;
+    }).join('');
   }
 
   trigger.addEventListener('click', openSearch);

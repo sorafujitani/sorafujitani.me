@@ -9,4 +9,5 @@ export interface BlogCardProps {
   description: string;
   pubDate: Date;
   slug: string;
+  externalUrl?: string;
 }
