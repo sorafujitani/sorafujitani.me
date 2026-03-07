@@ -1,6 +1,6 @@
 ---
-title: "How I Choose a TypeScript Schema Validation Library"
-description: "Practical criteria for choosing between Zod, Valibot, and other TypeScript schema validation libraries — bundle size, tree-shaking, and when each one makes sense"
+title: "Bundle Size Constraints of Class-Based Zod, and When to Use It"
+description: "Zod's class-based design limits tree-shaking and impacts bundle size — here's when that matters and when it doesn't"
 pubDate: 2026-03-07
 tags: [typescript, zod, valibot, bundle-size, tree-shaking]
 draft: false
