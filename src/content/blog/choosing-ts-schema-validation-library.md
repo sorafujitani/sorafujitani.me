@@ -77,6 +77,6 @@ When bundle size matters — i.e., the code runs in the browser — I currently 
 
 ## Final Thoughts
 
-Honestly, for personal tools and small projects, worrying about this level of detail may not be the best use of your time. But since I work on OSS projects with a larger user base, it matters to me.
+Honestly, for personal tools and small projects, worrying about this level of detail may not be the best use of your time. But I personally enjoy this kind of tuning, so I often find myself looking at benchmarks.
 
 I'm not suggesting you immediately swap libraries — that's a heavy decision. Instead, a good first step is to turn on your build tool's bundle size reporting and start getting a feel for how big your code actually is.
