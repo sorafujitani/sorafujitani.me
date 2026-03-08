@@ -1,53 +1,55 @@
 ---
-title: "Bundle Size Constraints of Class-Based Zod, and When to Use It"
-description: "Zod's class-based design limits tree-shaking and impacts bundle size — here's when that matters and when it doesn't"
+title: "Zodはtree-shakingが効かないので選定しづらいケースがある"
+description: "Zodのclass base設計によるtree shakingの制約とbundle sizeへの影響、使い分けの観点をまとめました"
 pubDate: 2026-03-07
 tags: [typescript, zod, valibot, bundle-size, tree-shaking]
 draft: false
 ---
 
-I sometimes get asked how I choose a schema validation library in TypeScript, so I wanted to write down the criteria I use.
+TypeScript schema validation libraryの選定ってどうしてる？みたいな相談をされることがあったので、観点として持っているものをまとめてみます。一番有名なのはZodで僕もよく使うので、逆にZodを使わないのはどんな時かみたいな話です。
 
-The most popular option is [Zod](https://github.com/colinhacks/zod), and I use it often — so this is more about when I _don't_ use Zod.
+## 前提: TypeScriptのトランスパイルとbundle size
 
-## Background: TypeScript, Transpilation, and Bundle Size
+前提の話として、TypeScriptはそのまま機械語に変換して実行することはできず、一度JavaScriptに変換してから実行する必要がある（トランスパイルってやつ）。
 
-TypeScript can't be executed directly. It has to be converted to JavaScript first — a process called transpilation.
+このトランスパイルを含めた、開発者が記述したTypeScriptをランタイムで実行したいJavaScriptに変換して、かつそれを最適化する一連の変換プロセスをbuildという。buildが完了した後のJavaScriptコードのデータサイズを「bundle size」という。
 
-The broader pipeline of transforming the TypeScript you write into optimized, runtime-ready JavaScript is called the **build** process. The data size of the resulting JavaScript is called the **bundle size**.
+友達の記事がわかりやすくて、先に読むと理解しやすいかも
 
-Bundle size is easy to overlook but important. Smaller bundles lead to:
+https://qiita.com/JinA293/items/6b60456fa9cceba1341f
 
-- **Faster web performance** — JavaScript runs in the browser, and it's frequently sent from the web server to the client. A smaller bundle means less bandwidth and faster page loads.
-- **Faster installs** — `npm install` downloads built JavaScript, so a smaller package means quicker installs and less disk usage (though this difference is relatively small).
+このbundle sizeというのは意識するのが難しいけど大切で、小さいと下記の嬉しさにつながる
 
-## Tree-Shaking and Its Limitation with Classes
+- JavaScriptはブラウザ上で動作するという特徴があり、web serverからブラウザへの送信が頻繁に行われる。この時に、bundle sizeが小さいほど通信の帯域幅を取らず、webパフォーマンスの高速さにつながる
+- npm installなどはbuild後のJavaScriptをダウンロードしてくるので、これが小さいとインストール速度が速くなりやマシンの使用量が小さくなることにつながる（これは結構微差だが）
 
-Bundle size is directly related to the choice between Zod and its alternatives.
+## tree shakingとclass構文の制約
 
-One key step in the build process (beyond transpilation) is **tree-shaking** — a mechanism that removes dead code (code that's defined but never referenced) from the build output.
+このbuild後のbundle sizeが、Zodを使うかの選定に関係しています。buildのトランスパイル以外のプロセスの一つにtree shakingというのがあります。定義されたが参照がないコード（デットコード）をbuild成果物から除外するための仕組みです。
 
-Without tree-shaking, unused variables and functions end up in the final bundle, bloating its size unnecessarily. Of course, you shouldn't leave dead code around in the first place — but having machines handle this automatically is what matters.
+これがなければ実際に使用されていない変数や関数もbuild成果物に含まれ、未使用コードによってbundle sizeの肥大化が発生するなどの原因になります。そもそもデッドコードを残しておくなという話ではあるが、人間ではなく機械がなんとかできるということが大切。
 
 https://rollupjs.org/introduction/#tree-shaking
 
-However, tree-shaking has an important limitation: **it cannot eliminate unused code defined inside class syntax.** It works fine for regular functions, variables, and objects — but not for class internals.
+この便利なtree shakingですが、重要な制約があります。通常の関数や変数、それらを含めたオブジェクトには作用するが、class構文内に定義された未使用コードをbuild成果物から除外することができません。
 
-This means that when a user does something like `import { z } from "zod"`, all the methods and properties defined inside Zod's classes get pulled into the build — even the ones you never use.
+これにより、ユーザーが
 
-Here's what Zod's internals look like:
+```
+import { ClassDef } from "zod";
+```
+
+などでzodからclass定義されたものをimportすることで、そのclass内に定義されているが使っていない全てのオブジェクトがbuildに含まれる結果になる。Zodの内部実装はこんな感じ
+
 https://github.com/colinhacks/zod/blob/7d98c909329713cb2f478620f8a67aaf3ef40ce2/packages/zod/src/v3/types.ts#L158
 
-This limitation makes Zod's bundle size a real concern and creates an opening for competing libraries.
+この制約によってZodのbundle sizeはユーザーにとっての課題の一つになり、競合OSSの付け入る隙になっているわけです。例えばValibotは関数ベースの設計であり、Zodと比較した際のbundle sizeの改善に成功しています
 
-For example, [Valibot](https://github.com/open-circle/valibot) uses a function-based design and achieves a significantly smaller bundle size compared to Zod:
 https://speakerdeck.com/nayuta999999/baridesiyonraiburariche-di-bi-jiao?slide=16
 
-## Why Did Zod Choose a Class-Based Design?
+## なぜZodはclass baseの設計判断をしたのか
 
-So why did Zod go with classes in the first place?
-
-This is actually documented in a conversation between Zod's creator and TypeScript's former manager. The answer: **he didn't know any other way to implement it at the time.**
+この制約があって、なぜZodはclass baseの設計判断をしたのか。Zodの開発者本人とTypeScriptの元マネージャーの議事録に残っていて、「Zodの設計をしているときにclass base以外の実装方法を知らなかった」らしいです。かわいいですね。
 
 > 15:29 You've chosen classes with Zod, and pretty much everything in Zod there's a lot of things which are not classes, a lot of things are basically just methods inside these classes. The main types you've chosen to represent with classes. Why was that?
 
@@ -55,28 +57,26 @@ This is actually documented in a conversation between Zod's creator and TypeScri
 
 https://www.totaltypescript.com/bonuses/typescript-expert-interviews/colin-mcdonnell-talks-about-the-design-choices-behind-zod
 
-Endearing, honestly.
+## 使い分け
 
-## So When Should You Use What?
+ではZodは使うべきではないのか？みたいな話。僕は下記の使い分けをしています。
 
-Here's how I decide:
+### backend ts → Zod
 
-### Backend TypeScript → Zod
+例えばbackend tsではZodを使うことが多い。backendのtsではトランスパイル以上のbuild最適化をしないことが多く、サーバに配置されるだけなのでbundle sizeはあまり問題にならない。
 
-Backend TypeScript typically doesn't go through heavy build optimization beyond transpilation. The code just sits on a server, so bundle size rarely matters. Zod's excellent API is convenient, so I use it whenever it fits.
+番外編知識として、backend tsのコードをminifyやbundleすると実行時に正しいstack traceが取れなくなるなどの不便がある。Zodの優れたAPIは便利なので必要なケースでは積極的に使う。
 
-As a side note, minifying or bundling backend TypeScript can cause issues like losing accurate stack traces at runtime — another reason not to over-optimize there.
+### CLIやParser → Zod
 
-### CLI Tools & Parsers → Zod
+マシン上で動けばいいツール（CLI, Parser）でも基本的にZodを使って、backend tsとほぼ同じ理由。
 
-Same reasoning as backend. It runs on a machine, not in a browser, so bundle size isn't a concern.
+### ブラウザで動作するJS → Valibot
 
-### Browser-Facing JavaScript → Valibot
+bundle sizeが気になる（ブラウザで動作する前提のjsなど）ケースでは、現状はValibotを使っています。他にも選択肢はあるがそっちはあまり知らない。
 
-When bundle size matters — i.e., the code runs in the browser — I currently use Valibot. There are other alternatives out there, but I'm less familiar with them.
+## まとめ
 
-## Final Thoughts
+正直個人で使うツールなどでここまで意識することがコスパいいかと言われると微妙ですが、ユーザーが多いOSSの開発をしたりしている関係で自分には重要だったりします。
 
-Honestly, for personal tools and small projects, worrying about this level of detail may not be the best use of your time. But I personally enjoy this kind of tuning, so I often find myself looking at benchmarks.
-
-I'm not suggesting you immediately swap libraries — that's a heavy decision. Instead, a good first step is to turn on your build tool's bundle size reporting and start getting a feel for how big your code actually is.
+これを見てライブラリを変えよう！とかは重たい話だと思うので、まずはbuildツールのbundle size表示オプションをonにして、自分が書いてるコードのsizeは何byteくらいだろうか、とかを見てみるとよさそう
