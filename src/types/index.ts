@@ -9,5 +9,6 @@ export interface BlogCardProps {
   description: string;
   pubDate: Date;
   slug: string;
+  pinned?: boolean;
   externalUrl?: string;
 }

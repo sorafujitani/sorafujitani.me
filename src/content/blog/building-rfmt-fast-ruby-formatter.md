@@ -4,6 +4,7 @@ description: "Introducing rfmt, a high-speed Ruby code formatter built with Rust
 pubDate: 2026-01-25
 tags: [ruby, rust, oss, formatter]
 draft: false
+pinned: true
 ---
 
 I'm building rfmt, a fast Ruby code formatter.

@@ -4,7 +4,7 @@ import { formatDate } from '@lib/date';
 
 type Props = BlogCardProps;
 
-const { title, description, pubDate, slug, externalUrl } = Astro.props;
+const { title, description, pubDate, slug, pinned, externalUrl } = Astro.props;
 
 const formattedDate = formatDate(pubDate);
 
@@ -30,6 +30,7 @@ const mediaName = isExternal ? getMediaName(externalUrl!) : null;
 
 <article class="blog-card">
   <div class="blog-card-meta">
+    {pinned && <span class="pinned-badge">Pinned</span>}
     <time datetime={pubDate.toISOString()}>{formattedDate}</time>
     {isExternal && mediaName && (
       <span class="external-badge">{mediaName}</span>
@@ -80,6 +81,17 @@ const mediaName = isExternal ? getMediaName(externalUrl!) : null;
   time {
     font-size: 14px;
     color: var(--color-text-muted);
+  }
+
+  .pinned-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(255, 200, 0, 0.15);
+    border: 1px solid rgba(255, 200, 0, 0.3);
+    border-radius: 4px;
+    font-size: 12px;
+    color: #ffc800;
+    font-weight: 500;
   }
 
   .external-badge {

@@ -23,6 +23,7 @@ export interface Post {
     author?: string;
     tags?: string[];
     draft?: boolean;
+    pinned?: boolean;
     externalUrl?: string;
   };
   slug: string;
@@ -77,6 +78,7 @@ export async function getPublishedPosts(): Promise<Post[]> {
           author: post.data.author,
           tags: post.data.tags,
           draft: post.data.draft,
+          pinned: post.data.pinned,
           externalUrl: post.data.externalUrl,
         },
         slug: post.slug,
@@ -84,5 +86,9 @@ export async function getPublishedPosts(): Promise<Post[]> {
     ...zennPosts,
   ];
 
-  return posts.sort((a, b) => b.data.pubDate.getTime() - a.data.pubDate.getTime());
+  return posts.sort((a, b) => {
+    if (a.data.pinned && !b.data.pinned) return -1;
+    if (!a.data.pinned && b.data.pinned) return 1;
+    return b.data.pubDate.getTime() - a.data.pubDate.getTime();
+  });
 }
