@@ -6,7 +6,7 @@ tags: [typescript, zod, valibot, bundle-size, tree-shaking]
 draft: false
 ---
 
-TypeScript schema validation libraryの選定ってどうしてる？みたいな相談をされることがあったので、観点として持っているものをまとめてみます。一番有名（な気がする）なのはZodで僕もよく使うので、逆にZodを使わないのはどんな時かみたいな話です。
+TypeScript schema validation libraryの選定ってどうしてる？みたいな相談をされることがあったので、観点として持っているものを簡単にまとめてみます。一番有名（な気がする）なのはZodで僕もよく使うので、逆にZodを使わないのはどんな時かみたいな話です。
 
 ## 前提: TypeScriptのトランスパイルとbundle size
 
