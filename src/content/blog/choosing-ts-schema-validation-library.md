@@ -1,5 +1,5 @@
 ---
-title: "Zodはtree-shakingが効かないので選定しづらいケースがある"
+title: "Zodはclassオブジェクトにtree-shakingが効かないこともあってbundle sizeがでかい"
 description: "Zodのclass base設計によるtree shakingの制約とbundle sizeへの影響、使い分けの観点をまとめました"
 pubDate: 2026-03-07
 tags: [typescript, zod, valibot, bundle-size, tree-shaking]
