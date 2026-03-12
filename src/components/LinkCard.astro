@@ -78,10 +78,15 @@ try {
     justify-content: center;
   }
 
+  .link-card-text {
+    color: inherit;
+    text-decoration: none;
+  }
+
   .link-card-title {
     font-size: 17px;
     font-weight: 700;
-    color: var(--color-heading) !important;
+    color: var(--color-heading);
     margin: 0 0 10px 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -89,16 +94,11 @@ try {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     line-height: 1.4;
-    text-decoration: none !important;
-  }
-
-  .link-card:hover .link-card-title {
-    text-decoration: none !important;
   }
 
   .link-card-description {
     font-size: 14px;
-    color: var(--color-text-muted) !important;
+    color: var(--color-text-muted);
     margin: 0 0 12px 0;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -106,26 +106,16 @@ try {
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     line-height: 1.6;
-    text-decoration: none !important;
-  }
-
-  .link-card:hover .link-card-description {
-    text-decoration: none !important;
   }
 
   .link-card-url {
     font-size: 13px;
-    color: var(--color-text-muted) !important;
+    color: var(--color-text-muted);
     margin: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
-    text-decoration: none !important;
-  }
-
-  .link-card:hover .link-card-url {
-    text-decoration: none !important;
+    font-family: var(--font-mono);
   }
 
   .link-card-image {

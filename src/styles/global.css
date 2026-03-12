@@ -14,15 +14,9 @@
   --color-code-bg: #0d1117;
   --color-code-text: #e6edf3;
 
-  /* Syntax Highlighting Colors - Cyan/White theme */
-  --syntax-keyword: #00d8ff;
-  --syntax-function: #79c0ff;
-  --syntax-string: #a5d6ff;
-  --syntax-number: #79c0ff;
-  --syntax-comment: #8b949e;
-  --syntax-operator: #e6edf3;
-  --syntax-variable: #e6edf3;
-  --syntax-constant: #00d8ff;
+  /* Monospace Font */
+  --font-mono: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+
 }
 
 body {

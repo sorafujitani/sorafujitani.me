@@ -1,4 +1,5 @@
 ---
+import { Font } from 'astro:assets';
 import Search from '@components/Search.astro';
 import StructuredData from '@components/StructuredData.astro';
 import '@styles/global.css';
@@ -47,10 +48,12 @@ const ogImage = new URL(image, siteUrl);
     {description && <meta property="twitter:description" content={description} />}
     <meta property="twitter:image" content={ogImage} />
 
-    <!-- Google Fonts: Fredoka -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&display=swap" rel="stylesheet" />
+    <!-- Prevent FOUC: is:inline embeds in HTML, is:global loads from CSS file -->
+    <style is:inline>body { visibility: hidden; }</style>
+    <style is:global>body { visibility: visible; }</style>
+
+    <!-- Fonts -->
+    <Font cssVariable="--font-fredoka" preload />
 
     <!-- Structured Data -->
     {isHomePage && <StructuredData type="WebSite" />}
@@ -140,7 +143,7 @@ const ogImage = new URL(image, siteUrl);
     display: flex;
     align-items: center;
     gap: 6px;
-    font-family: 'Fredoka', sans-serif;
+    font-family: var(--font-fredoka), sans-serif;
     font-size: 22px;
     font-weight: 600;
     text-decoration: none;

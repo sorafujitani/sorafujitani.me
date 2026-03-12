@@ -57,7 +57,7 @@ const searchData = posts.map(post => ({
 
   function search(query) {
     if (!query.trim()) {
-      results.innerHTML = '';
+      results.replaceChildren();
       return;
     }
 
@@ -69,27 +69,38 @@ const searchData = posts.map(post => ({
     );
 
     if (matches.length === 0) {
-      results.innerHTML = `
-        <div class="no-results">
-          <div class="no-results-icon">🔍</div>
-          <div class="no-results-text">No results found</div>
-          <div class="no-results-hint">Try different keywords</div>
-        </div>
-      `;
+      const empty = document.createElement('div');
+      empty.className = 'no-results';
+      empty.innerHTML = `<div class="no-results-icon">🔍</div><div class="no-results-text">No results found</div><div class="no-results-hint">Try different keywords</div>`;
+      results.replaceChildren(empty);
       return;
     }
 
-    results.innerHTML = matches.map(post => {
-      const href = post.externalUrl || `/blog/${post.slug}/`;
-      const targetAttr = post.externalUrl ? ' target="_blank" rel="noopener noreferrer"' : '';
-      const externalIcon = post.externalUrl ? ' <span style="font-size:11px;opacity:0.6">↗</span>' : '';
-      return `
-        <a href="${href}" class="search-result"${targetAttr}>
-          <span class="result-title">${post.title}${externalIcon}</span>
-          <span class="result-description">${post.description}</span>
-        </a>
-      `;
-    }).join('');
+    const fragment = document.createDocumentFragment();
+    for (const post of matches) {
+      const a = document.createElement('a');
+      a.href = post.externalUrl || `/blog/${post.slug}/`;
+      a.className = 'search-result';
+      if (post.externalUrl) {
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      }
+      const titleSpan = document.createElement('span');
+      titleSpan.className = 'result-title';
+      titleSpan.textContent = post.title;
+      if (post.externalUrl) {
+        const icon = document.createElement('span');
+        icon.className = 'external-indicator';
+        icon.textContent = ' ↗';
+        titleSpan.appendChild(icon);
+      }
+      const descSpan = document.createElement('span');
+      descSpan.className = 'result-description';
+      descSpan.textContent = post.description;
+      a.append(titleSpan, descSpan);
+      fragment.appendChild(a);
+    }
+    results.replaceChildren(fragment);
   }
 
   trigger.addEventListener('click', openSearch);
@@ -224,7 +235,7 @@ const searchData = posts.map(post => ({
     padding: 8px;
   }
 
-  .search-result {
+  .search-results :global(.search-result) {
     display: block;
     padding: 16px;
     text-decoration: none;
@@ -233,61 +244,65 @@ const searchData = posts.map(post => ({
     transition: background 0.2s ease;
   }
 
-  .search-result:last-child {
+  .search-results :global(.search-result:last-child) {
     margin-bottom: 0;
   }
 
-  .search-result:hover {
+  .search-results :global(.search-result:hover) {
     background: var(--color-tag-bg);
   }
 
-  .result-title {
+  .search-results :global(.result-title) {
     display: block;
-    color: #00d8ff !important;
+    color: var(--color-accent);
     font-weight: 600;
     font-size: 16px;
     margin-bottom: 8px;
     line-height: 1.4;
   }
 
-  .search-result:visited .result-title {
-    color: #00d8ff !important;
+  .search-results :global(.search-result:visited .result-title) {
+    color: var(--color-accent);
   }
 
-  .search-result:hover .result-title {
-    color: #5ce6ff !important;
+  .search-results :global(.search-result:hover .result-title) {
+    color: var(--color-accent-hover);
   }
 
-  .result-description {
-    display: block;
+  .search-results :global(.external-indicator) {
+    font-size: 11px;
+    opacity: 0.6;
+  }
+
+  .search-results :global(.result-description) {
+    display: -webkit-box;
     color: var(--color-text-secondary);
     font-size: 14px;
     line-height: 1.5;
-    display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
 
-  .no-results {
+  .search-results :global(.no-results) {
     padding: 48px 24px;
     text-align: center;
     margin: 0;
   }
 
-  .no-results-icon {
+  .search-results :global(.no-results-icon) {
     font-size: 48px;
     margin-bottom: 16px;
   }
 
-  .no-results-text {
-    color: #ffffff;
+  .search-results :global(.no-results-text) {
+    color: var(--color-heading);
     font-size: 16px;
     font-weight: 500;
   }
 
-  .no-results-hint {
-    color: #ffffff;
+  .search-results :global(.no-results-hint) {
+    color: var(--color-heading);
     font-size: 14px;
     margin-top: 8px;
     opacity: 0.7;

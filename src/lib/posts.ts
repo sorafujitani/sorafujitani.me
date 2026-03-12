@@ -81,7 +81,7 @@ export async function getPublishedPosts(): Promise<Post[]> {
           pinned: post.data.pinned,
           externalUrl: post.data.externalUrl,
         },
-        slug: post.slug,
+        slug: post.id,
       })),
     ...zennPosts,
   ];

@@ -1,17 +1,19 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import BlogLayout from '@layouts/BlogLayout.astro';
 import Breadcrumb from '@components/Breadcrumb.astro';
 import StructuredData from '@components/StructuredData.astro';
 import TableOfContents from './_components/TableOfContents.astro';
+import { formatDate } from '@lib/date';
+import { SITE_URL } from '@lib/constants';
 
 export async function getStaticPaths() {
   const posts = await getCollection('blog');
   return posts
     .filter(post => !post.data.externalUrl)
     .map(post => ({
-      params: { slug: post.slug },
+      params: { slug: post.id },
       props: { post },
     }));
 }
@@ -21,13 +23,10 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const { Content, headings } = await post.render();
-
-import { formatDate } from '@lib/date';
-import { SITE_URL } from '@lib/constants';
+const { Content, headings } = await render(post);
 
 const siteUrl = Astro.site || SITE_URL;
-const postUrl = new URL(`/blog/${post.slug}`, siteUrl).toString();
+const postUrl = new URL(`/blog/${post.id}`, siteUrl).toString();
 const encodedUrl = encodeURIComponent(postUrl);
 const encodedTitle = encodeURIComponent(post.data.title);
 
@@ -35,7 +34,7 @@ const formattedDate = formatDate(post.data.pubDate);
 const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.updatedDate) : null;
 ---
 
-<BlogLayout title={post.data.title} description={post.data.description} image={`/og/${post.slug}.png`}>
+<BlogLayout title={post.data.title} description={post.data.description} image={`/og/${post.id}.png`}>
   <StructuredData
     type="Article"
     title={post.data.title}
@@ -43,11 +42,11 @@ const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.update
     publishedDate={post.data.pubDate}
     updatedDate={post.data.updatedDate}
     author={post.data.author}
-    image={`/og/${post.slug}.png`}
+    image={`/og/${post.id}.png`}
     url={postUrl}
   />
   <article class="blog-post">
-    <Breadcrumb items={[{ name: 'Blog', url: '/blog' }, { name: post.data.title, url: `/blog/${post.slug}` }]} />
+    <Breadcrumb items={[{ name: 'Blog', url: '/blog' }, { name: post.data.title, url: `/blog/${post.id}` }]} />
     <header class="post-header">
       <h1>{post.data.title}</h1>
       <div class="post-meta">
@@ -166,7 +165,7 @@ const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.update
   }
 
   .separator {
-    color: #6b7280;
+    color: var(--color-text-muted);
   }
 
   .tags {
@@ -232,8 +231,8 @@ const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.update
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.9em;
-    font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
-    color: #00d8ff;
+    font-family: var(--font-mono);
+    color: var(--color-accent);
   }
 
   .post-content :global(pre) {
@@ -257,10 +256,10 @@ const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.update
     left: 0;
     right: 0;
     padding: 8px 16px;
-    background: #1c2128;
-    color: #8b949e;
+    background: var(--color-tag-bg);
+    color: var(--color-text-muted);
     font-size: 13px;
-    font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+    font-family: var(--font-mono);
     border-radius: 8px 8px 0 0;
     border-bottom: 1px solid var(--color-border);
   }
@@ -272,62 +271,6 @@ const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.update
     line-height: 1.6;
     border: none;
     color: inherit;
-  }
-
-  /* Syntax Highlighting */
-  .post-content :global(pre code .keyword),
-  .post-content :global(pre code .import),
-  .post-content :global(pre code .export),
-  .post-content :global(pre code .from),
-  .post-content :global(pre code .return),
-  .post-content :global(pre code .if),
-  .post-content :global(pre code .for),
-  .post-content :global(pre code .const),
-  .post-content :global(pre code .let),
-  .post-content :global(pre code .var),
-  .post-content :global(pre code .function),
-  .post-content :global(pre code .async),
-  .post-content :global(pre code .await),
-  .post-content :global(pre code .try),
-  .post-content :global(pre code .catch),
-  .post-content :global(pre code .throw) {
-    color: var(--syntax-keyword);
-    font-weight: 500;
-  }
-
-  .post-content :global(pre code .function-name),
-  .post-content :global(pre code .method) {
-    color: var(--syntax-function);
-  }
-
-  .post-content :global(pre code .string),
-  .post-content :global(pre code .template-string) {
-    color: var(--syntax-string);
-  }
-
-  .post-content :global(pre code .number),
-  .post-content :global(pre code .boolean) {
-    color: var(--syntax-number);
-  }
-
-  .post-content :global(pre code .comment) {
-    color: var(--syntax-comment);
-    font-style: italic;
-  }
-
-  .post-content :global(pre code .operator),
-  .post-content :global(pre code .punctuation) {
-    color: var(--syntax-operator);
-  }
-
-  .post-content :global(pre code .variable),
-  .post-content :global(pre code .parameter) {
-    color: var(--syntax-variable);
-  }
-
-  .post-content :global(pre code .constant),
-  .post-content :global(pre code .class-name) {
-    color: var(--syntax-constant);
   }
 
   .post-content :global(a) {
@@ -425,7 +368,7 @@ const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.update
     text-decoration: none;
     border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: background 0.2s ease, color 0.2s ease;
   }
 
   .share-button:hover {
@@ -435,7 +378,7 @@ const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.update
 
   .share-copy.copied {
     background: #22c55e;
-    color: white;
+    color: var(--color-heading);
   }
 
   @media (max-width: 768px) {

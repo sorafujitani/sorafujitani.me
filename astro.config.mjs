@@ -1,5 +1,5 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, fontProviders } from 'astro/config';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import remarkGfm from 'remark-gfm';
@@ -9,6 +9,19 @@ import { transformerFilename } from './src/lib/shiki/filename-transformer.ts';
 // https://astro.build/config
 export default defineConfig({
   site: 'https://sorafujitani.me',
+  fonts: [
+    {
+      name: 'Fredoka',
+      cssVariable: '--font-fredoka',
+      provider: fontProviders.google(),
+      weights: [500, 600],
+      styles: ['normal'],
+    },
+  ],
+  experimental: {
+    queuedRendering: { enabled: true },
+    rustCompiler: true,
+  },
   integrations: [
     mdx({
       remarkPlugins: [remarkGfm, remarkCodeFilename],
