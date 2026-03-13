@@ -8,7 +8,7 @@ export const getStaticPaths: GetStaticPaths = async () => {
   return posts
     .filter(post => !post.data.externalUrl)
     .map((post) => ({
-      params: { slug: post.slug },
+      params: { slug: post.id },
       props: { title: post.data.title, tags: post.data.tags || [] },
     }));
 };

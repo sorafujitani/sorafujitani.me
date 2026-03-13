@@ -1,9 +1,9 @@
 ---
-import { getEntry } from 'astro:content';
+import { getEntry, render } from 'astro:content';
 import BlogLayout from '@layouts/BlogLayout.astro';
 
 const about = await getEntry('about', 'index');
-const { Content } = await about.render();
+const { Content } = await render(about);
 ---
 
 <BlogLayout title="About" description="Sora Fujitaniについて">

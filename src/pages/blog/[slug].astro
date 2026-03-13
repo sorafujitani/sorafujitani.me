@@ -1,5 +1,5 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import type { CollectionEntry } from 'astro:content';
 import BlogLayout from '@layouts/BlogLayout.astro';
 import Breadcrumb from '@components/Breadcrumb.astro';
@@ -11,7 +11,7 @@ export async function getStaticPaths() {
   return posts
     .filter(post => !post.data.externalUrl)
     .map(post => ({
-      params: { slug: post.slug },
+      params: { slug: post.id },
       props: { post },
     }));
 }
@@ -21,13 +21,13 @@ interface Props {
 }
 
 const { post } = Astro.props;
-const { Content, headings } = await post.render();
+const { Content, headings } = await render(post);
 
 import { formatDate } from '@lib/date';
 import { SITE_URL } from '@lib/constants';
 
 const siteUrl = Astro.site || SITE_URL;
-const postUrl = new URL(`/blog/${post.slug}`, siteUrl).toString();
+const postUrl = new URL(`/blog/${post.id}`, siteUrl).toString();
 const encodedUrl = encodeURIComponent(postUrl);
 const encodedTitle = encodeURIComponent(post.data.title);
 
@@ -35,7 +35,7 @@ const formattedDate = formatDate(post.data.pubDate);
 const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.updatedDate) : null;
 ---
 
-<BlogLayout title={post.data.title} description={post.data.description} image={`/og/${post.slug}.png`}>
+<BlogLayout title={post.data.title} description={post.data.description} image={`/og/${post.id}.png`}>
   <StructuredData
     type="Article"
     title={post.data.title}
@@ -43,11 +43,11 @@ const formattedUpdatedDate = post.data.updatedDate ? formatDate(post.data.update
     publishedDate={post.data.pubDate}
     updatedDate={post.data.updatedDate}
     author={post.data.author}
-    image={`/og/${post.slug}.png`}
+    image={`/og/${post.id}.png`}
     url={postUrl}
   />
   <article class="blog-post">
-    <Breadcrumb items={[{ name: 'Blog', url: '/blog' }, { name: post.data.title, url: `/blog/${post.slug}` }]} />
+    <Breadcrumb items={[{ name: 'Blog', url: '/blog' }, { name: post.data.title, url: `/blog/${post.id}` }]} />
     <header class="post-header">
       <h1>{post.data.title}</h1>
       <div class="post-meta">

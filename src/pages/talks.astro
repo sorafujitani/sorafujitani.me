@@ -1,5 +1,5 @@
 ---
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
 import BlogLayout from '@layouts/BlogLayout.astro';
 
 // スライドURLからOG画像を自動取得
@@ -44,7 +44,7 @@ talks.sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
     {talks.length > 0 ? (
       <div class="talks-list">
         {talks.map(async (talk) => {
-          const { Content } = await talk.render();
+          const { Content } = await render(talk);
           return (
             <article class="talk-card">
               {talk.thumbnail && (
