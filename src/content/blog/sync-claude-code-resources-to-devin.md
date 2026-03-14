@@ -10,6 +10,7 @@ draft: false
 [fujitani sora](https://x.com/sorafujitani)です。
 
 自分はClaude Codeをメイン利用のAgentとし、Remote環境での並列開発などにDevinを利用している。
+
 これらを併用しているプロジェクトでは、それぞれに独自のナレッジやワークフロー定義を持たせることになる。
 
 Claude Code には以下の独自機能がある
@@ -28,13 +29,17 @@ Claude Code には以下の独自機能がある
 | **Playbooks** | 手順書としてDevinが実行するワークフロー |
 
 両者は概念的に対応関係にあるにもかかわらず、記法が異なるため手動で二重管理するのはメンテコストがかなり厳しい。
+
 CodexなどのLocalで動作するAgentであればSymbolic Linkなどの解決がありますが、DevinのリソースはRemoteに置かれることや、独自の機能表現もあり単純ではありません。
+
 そこで **Claude Code側をSingle Source of Truthとし、Devin APIへ同期するスクリプト** を作って運用しているので紹介します。
 
-> Claude Codeの最新仕様では、CommandとSkillが統合されています。
-> 自分も新しく作成するものはSkillとして作成していますが、本記事で紹介するworkflowにおいては.claude/command/をそのまま利用しています。
-> 後方互換のサポートはあるので問題はないですが、Claude Skillの特定パターンのみをDevin Playbooksにマッピングするなど追加の工夫があってもいいかもしれません。
-> [https://code.claude.com/docs/en/skills](https://code.claude.com/docs/en/skills)
+Claude Codeの最新仕様では、CommandとSkillが統合されています。
+自分も新しく作成するものはSkillとして作成していますが、本記事で紹介するworkflowにおいては`.claude/command/`をそのまま利用しています。
+
+後方互換のサポートはあるので問題はないですが、Claude Skillの特定パターンのみをDevin Playbooksにマッピングするなど追加の工夫があってもいいかもしれません。
+
+[https://code.claude.com/docs/en/skills](https://code.claude.com/docs/en/skills)
 
 ## ディレクトリ構成
 
@@ -54,7 +59,7 @@ project-root/
 
 ## sync-to-devin.sh
 
-.claudeのリソースを.devin用に変換し、Devin APIでRemoteに反映するshell scriptの本体。
+`.claude`のリソースを`.devin`用に変換し、Devin APIでRemoteに反映するshell scriptの本体。
 
 ```
 .claude/commands/  ──┐
@@ -66,12 +71,12 @@ project-root/
 ```
 
 下記が運用しているファイル全体です。
-長いのでアコーディオンにしている。
+長いです。
 
 普段利用しているshでは具体的なファイル名などが入っていますが、本記事では汎用的なデータに書き換えている。
+
 使用する時は各自の環境に合わせて修正してください。
 
-<details>
 <summary>sync-to-devin.shファイル全体</summary>
 
 ```bash
@@ -582,9 +587,7 @@ main() {
 main "$@"
 ```
 
-</details>
-
-実行時のログは下記のように出力され、.claudeをソースとした.devinへの同期とDevin APIを利用した反映が完了します。
+実行時のログは下記のように出力され、`.claude`をソースとした`.devin`への同期とDevin APIを利用した反映が完了します。
 
 ```
 $ ./sync-to-devin.sh
@@ -668,7 +671,8 @@ SKILL_PLAYBOOK_MAP=(
 
 ## 1. Claude固有記法のDevin向け変換
 
-Claude Code のMarkdownにはClaude固有の記法が含まれる。これをDevinが理解できる形式に変換する必要がある。
+Claude Code のMarkdownにはClaude固有の記法が含まれる。
+これをDevinが理解できる形式に変換する必要がある。
 
 ```bash
 convert_claude_to_devin() {
@@ -725,7 +729,8 @@ get_trigger_description() {
 }
 ```
 
-Claude Code の場合、SubAgent や Skill の発動条件はMarkdown内のメタデータやシステムプロンプトで暗黙的に制御されるが、Devin では明示的な `trigger_description` が必要。この変換テーブルがその橋渡しを担います。
+Claude Code の場合、SubAgent や Skill の発動条件はMarkdown内のメタデータやシステムプロンプトで暗黙的に制御されるが、Devin では明示的な `trigger_description` が必要。
+この変換テーブルがその橋渡しを担います。
 
 [https://docs.devin.ai/ja/api-reference/v1/knowledge/create-knowledge](https://docs.devin.ai/ja/api-reference/v1/knowledge/create-knowledge)
 
@@ -783,9 +788,11 @@ register_knowledge() {
 ```
 
 upsert実行により、ファイル名をkeyとして重複のないリソース作成を達成できる。
+
 余談ですが、実装時のテスト実行でこの考慮を忘れており、作成されてしまった重複リソースをポチポチと手で消してました。
 
-**`jq -n --arg` でJSONペイロードを構築している** のも重要なポイントです。Markdownの中身を `$body` に入れるため、ダブルクォート・バックスラッシュ・改行などの特殊文字が大量に含まれることがあり、ヒアドキュメントや手動エスケープでは簡単に壊れますが、`jq` に任せることでこの問題を回避している。
+`jq -n --arg` でJSONペイロードを構築している** のも重要なポイントです。
+Markdownの中身を `$body` に入れるため、ダブルクォート・バックスラッシュ・改行などの特殊文字が大量に含まれることがあり、ヒアドキュメントや手動エスケープでは簡単に壊れますが、`jq` に任せることでこの問題を回避している。
 
 [https://docs.devin.ai/ja/api-reference/overview](https://docs.devin.ai/ja/api-reference/overview)
 
@@ -839,7 +846,8 @@ sync_mapped_files "SubAgent" \
    .devin/playbooks/*.md を API に upsert
 ```
 
-ローカルの `.devin/` ディレクトリにも変換済みファイルを出力することで、**Devinがリポジトリを直接読む際にも参照できる** というメリットがあると考えています。
+ローカルの `.devin/` ディレクトリにも変換済みファイルを出力することで、
+**Devinがリポジトリを直接読む際にも参照できる** というメリットがあると考えています。
 
 ## 使い方
 
@@ -863,7 +871,8 @@ export DEVIN_API_KEY="your-api-key"
 
 ## まとめ
 
-この仕組みにより、異なる性質を持ったAgentの相互運用, メンテナンスコストの削減にアプローチしています。
+この仕組みにより、異なる性質を持ったAgentの相互運用、メンテナンスコストの削減にアプローチしています。
+
 自分はこの辺りのAgentを組み込んだworkflow構築が好きな気配もあるので、いろいろ試していきたい。
 
 こっちも読んでね
