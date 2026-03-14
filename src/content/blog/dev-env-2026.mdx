@@ -1,0 +1,212 @@
+---
+title: "開発環境現状確認 2026 - 交換ブログvol.17"
+description: ""
+pubDate: 2026-02-22
+tags: []
+draft: false
+---
+
+import LinkCard from '../../components/LinkCard.astro';
+import Tweet from '../../components/Tweet.astro';
+
+初期からの[知らねえ単語](https://www.youtube.com/@shiraneetango)のリスナーなんですが、誰かとこんな感じのポットキャストやりたいなと思い始めてきました。
+[fujitani sora](https://x.com/sorafujitani)です。
+
+交換ブログ今cycleのテーマが開発環境現状確認 2026なので書きます。
+
+前回の二人の
+<LinkCard url="https://2323-code.hatenablog.com/entry/2026/01/21/180200" />
+
+> （最近字を追うのがしんどいときは新書とか中高生向けの本を読んでいるけどそれでもすくない）
+
+これがえらすぎる、僕は気分が乗らないと心が折れる
+
+<LinkCard url="https://topi-log.hatenablog.jp/entry/2026/02/15/211700" />
+
+> VSCodeを使ってるのは単純に使いやすさですね。Vimに憧れはあり慣れたい気持ちはありつつ、普段遣いがVSCodeなので結局これ使ってます。
+
+topiさんにはいまVimを指導しているのでもうすぐ変わることでしょう。
+
+> あれ？もずますさんは？
+
+もずますさんは僕と同じで怠惰なので次からです。
+このテーマは好きそうなのでしゅぱぱぱっと書いてくれることでしょう
+
+## OS, 開発環境
+
+仕事用も個人用もMacOSを使っている。
+PCゲームをあまりしないのでWindowsとかの必要はなくて、OSのカスタムなどはあまりしていない。
+Package Managerはデスクトップ系はまだHomebrewを使っていて,
+CLIや新しく入れるものははNix home-managerに管理を移している。
+
+開発環境は、仕事はDocker Container化していて、自分のOSSではNixで管理している。
+<LinkCard url="https://github.com/sorafujitani/rfmt/blob/main/flake.nix" />
+<LinkCard url="https://github.com/sorafujitani/wez-kv/blob/main/flake.nix" />
+
+shell nameやutilsなどの共通設定はshared-flake-nix repositoryにまとめて、個別のflake.nixが依存するようにしている。
+<LinkCard url="https://github.com/sorafujitani/shared-flake-nix" />
+
+maintenarでないOSSを開発する際も、localにflake.nixを用意して環境構築している。
+最近はHonoとかPrettierなのでJS/TS runtimeさえ入れれば簡単に動かせる。
+
+## Editor
+
+高校生の頃にVimを使い始めてから今でも同じで、Neovimを使っている。
+一時期はJetBrains系も使っていたが、Agentを中心に据えた開発環境を整えるためにterminalから使えるNeovimに統一した。
+
+<LinkCard url="https://github.com/fs0414/neovimdot" />
+
+主題ではないので軽くだけ触れておくと、PluginManegerはLazy.nvim, filerとかfuzzy finderとかは基本的にSnacks.nvimとmini.nvimがメンテナンスしているツールに寄せていっている。
+v0.11から導入された組み込みのLSP管理の仕組みを使っていて、新しいものを使うときにコードの変更が必要になるので追加するときは`dev:lsp-add`というagentのコマンドで半自動化している。
+
+Neovimはcontainerizeされていて、PCの環境に直接入れなくても簡単に試せる環境を整えている
+<LinkCard url="https://hub.docker.com/r/sora041490/nvim-config" />
+
+ちなみに、dotfilesを分割してRepository管理している。
+統合は後からでもできるが、後で分割しようとするのは結構難しいので、一旦分けている。
+それによって新しい環境に入れる時の負荷もそこまで上がったりはしない。
+
+あまりないが、IDEがほしい時はZedを使っている。
+Vim keybindとの連携がVSCode系統よりもスムーズな感じがする。
+<LinkCard url="https://zed.dev/" />
+
+## terminal
+
+2年前くらいからWezTermを使っている。
+軽くてクセがなくて普通に動く、という素晴らしいterminalだと思う。
+設定をLua langでかけるというのも大きくて、keymapを変更する際はagentに指示するだけで完了する。
+
+<LinkCard url="https://github.com/fs0414/weztermdot" />
+
+WezTerm Overlayを使ってコンパクトなworkspace運用にしている。
+workspaceの新規作成はaliasを使って簡略化していて、本来のコマンドはあまり覚えていない
+<LinkCard url="https://zenn.dev/soramarjr/articles/ff6d80f7b524d6" />
+
+Ghosttyも一時期使っていて設定されているが、tabが消せない仕様とか色々と肌に合わなくてやめてしまった。
+<LinkCard url="https://github.com/fs0414/ghosttydot" />
+
+## shell
+
+zshを使っていて、plugin manegerはsheldonを使っている。
+なるべくシンプルに保つようにしているが、shell aliasは62個貼ってあった。
+
+お気に入りのaliasを抜粋
+
+```zsh:.zshrc
+alias evsh='source ~/.zshrc'
+alias edsh='nvim ~/.zshrc'
+alias edshelldon='EDITOR=nvim sheldon edit'
+alias evshelldon='eval "$(sheldon source)"'
+alias ednv='nvim ~/.config/nvim'
+alias edcc='nvim ~/.claude/'
+alias edwez='nvim ~/.config/wezterm/wezterm.lua'
+alias ghbase='(){gh pr view $1 --json baseRefName --jq ".baseRefName"}'
+alias nv='nvim'
+alias wta='(){wezterm cli spawn --new-window --workspace "$1"}'
+alias nxdev='nix develop'
+alias met='memoli today'
+alias cc="claude"
+```
+
+## Note
+
+個人的なタスク管理, 作業記録などのPC内で完結させたいものは、memoliという自作のCLIを使って、terminalからメモを取っている。
+日付ベースでメモを取っていく前提の機能を入れていて、1日の始まりは大体`memoli daily`を実行して簡単な整理をしてからが生活リズムになっている。
+<LinkCard url="https://github.com/sorafujitani/memoli" />
+
+揮発性のある考えのメモなどは紙で取っていて、HINGEというコピー用紙を挟んで使えるタイプのメモ帳を使っている。
+19歳の時の誕プレで友達にもらってから愛用しているのでかれこれ5年目。
+今はA6サイズを普段も仕事でも使っていて、ジーンズのポッケにも入るので手ぶらの時も持っている。
+僕の作るtoolのアイデアとかはこのHINGEに支えられているかもしれない。
+<LinkCard url="https://idontknow.tokyo/think03.html" />
+
+## ランチャーツール
+
+Raycastを使っている、便利すぎ。
+デスクトップアプリの移動は全てRaycastで飛び回っている。
+
+公式のStoreにないけどほしいものがある時は、自作のExtensionをAgentにぱっと書かせたりしている。
+TypeScriptで書ける。
+これとか
+<LinkCard url="https://github.com/sorafujitani/ray-dsl-viewer" />
+
+## キーボード, マウス, モニター
+
+Kinesis Advantage 360を使っている。
+お世話になっている方から譲っていただいたもので、もうこれがない開発者人生は考えられない。
+<LinkCard url="https://amzn.asia/d/04tLCy7d" />
+これに書いてあるが、keymapはかなり改造していて、両親指のエリアだけでCTRLが3つ設定されている
+<LinkCard url="https://sorafujitani.me/blog/kinesis-advantage-hello-memory/" />
+
+肉球キーキャップは、遊舎工房に連れて行ってもらった時に買った。かわいい
+<Tweet url="https://x.com/sorafujitani/status/2024094510234685902?s=20" />
+
+会社とか出先ではHHKB Professional HYBRID Type-Sを使っている。こっちはもう3年くらいで、家と会社に一台ずつ置いてある。
+<LinkCard url="https://amzn.asia/d/05eYlzfE" />
+
+モニターはDellの4Kのを使っている。あまりこだわりはない
+<LinkCard url="https://amzn.asia/d/04XK1NqY" />
+
+ちなみに半分以上の時間はラップトップだけで作業している。
+
+マウスはLogicoolのトラックボールのやつ。
+<LinkCard url="https://amzn.asia/d/064mehU8" />
+
+## AI Agent
+
+Claude Maxユーザーで、Claude Codeを使っている。
+一時期はOpenAIやCursorも比較しながら使っていたが、AIベンダーの競争に自分の時間を取られるのがめんどくさくなってポールポジションを決めた結果、Claudeが選ばれた。
+
+repositoryごとの設定はあるが、　user scopeの設定はclaudedotとしてまとめている
+<LinkCard url="https://github.com/sorafujitani/claudedot" />
+
+publishしたいskillはpluginとしてまとめていて、
+`/plugin marketplace add sorafujitani/skills`でinstallできる。
+今は[自Blogの記事](https://sorafujitani.me/blog/agent-local-dir-merge/)で紹介したlocal-repo-finderと、推しているKarin.さんの最新情報を確認できるkarin-infoの2つだけ。
+これから増やしていくはず
+<LinkCard url="https://github.com/sorafujitani/skills" />
+
+MCPはNotion, Context7, DataDog, Linearなどなどを使っていて、なるべくMCPから操作するように意識してからは個別のアプリケーションを見にいくよりも便利な感じがある。
+
+弊社は[AI活用補助制度](https://toridori.co.jp/news/ai-support-upd/)があってありがたい、ありがとう
+
+## ブラウザ
+
+Arcを使っている。同等の縦タブがChromeに来ないうちは使い続けると思う。
+部分的にChromeも使っていて、Claude CodeからClaude in Chrome MCPを使うときにArcだと拡張が使えないので仕方なく開いている。
+
+## プレゼン資料作成
+
+<LinkCard url="https://github.com/sorafujitani/slidev-template" />
+
+[Slidev](https://ja.sli.dev/)を前提としたスライド資料生成の仕組みを整えたrepositoryからtemplate createしている。
+note.mdに内容をざっくりまとめてから、Claude Codeでgen-slideコマンドを実行すると、カラーテーマや言い回しなどの共通設定が考慮されたスライドが生成される仕組み。
+GitHub PagesにCI時に自動デプロイされるようにしている。
+
+## 自Blog
+
+<LinkCard url="https://sorafujitani.me/" />
+
+フレームワークはAstro, ホストはCloudFlare Pagesを使用している。
+BiomeとかDevinの公式ドキュメントの配色が好きで寄せている。
+
+別でまとめようと思っているが、下記の工夫があったりする
+
+- Blog記事のOGP生成
+- Zennと同じような、コードブロックに拡張子とファイル名を表示する仕組み
+  ![](/blog/dev-env-2026/code-block-example.png)
+- [Talks](https://sorafujitani.me/talks/)の資料がSpeakerDeckやGitHub Pagesなどを統一的にOGP生成できる
+- PullsのPublic PR一覧表示
+
+## まとめ
+
+総じて、開発環境においては下記を意識して構成している
+
+- 小さくシンプルである
+- 最小限の依存先である
+- 他のマシンでの再現性がある
+- なるべくpublishする
+
+開発環境に関わらずで同じものを長く使い続けたいタイプではあるので、とてもいいものでなければ別のツールややり方に変える気はあまりない。
+
+交換ブログつぎはふみさんです。Zedユーザーってことだけは知っている
