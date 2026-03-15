@@ -3,7 +3,7 @@ title: "phperkaigi2026-speakernote（執筆中なのでまだ見ないでね）"
 description: ""
 pubDate: 2026-03-14
 tags: []
-draft: false
+draft: true
 ---
 
 まずはこのコードを見てほしいんですが、こんなコードがレビューに上がってきたらどう感じるでしょうか。
