@@ -7,9 +7,10 @@ interface Props {
   title: string;
   description?: string;
   image?: string;
+  twitterCard?: 'summary' | 'summary_large_image';
 }
 
-const { title, description, image = '/profile.png' } = Astro.props;
+const { title, description, image = '/profile.png', twitterCard = 'summary_large_image' } = Astro.props;
 const isHomePage = Astro.url.pathname === '/';
 import { SITE_URL, SITE_NAME } from '@lib/constants';
 
@@ -41,7 +42,7 @@ const ogImage = new URL(image, siteUrl);
     <meta property="og:image" content={ogImage} />
 
     <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:card" content={twitterCard} />
     <meta property="twitter:url" content={canonicalURL} />
     <meta property="twitter:title" content={`${title} | ${SITE_NAME}`} />
     {description && <meta property="twitter:description" content={description} />}

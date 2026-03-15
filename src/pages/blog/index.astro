@@ -6,7 +6,7 @@ import { getPublishedPosts } from '@lib/posts';
 const sortedPosts = await getPublishedPosts();
 ---
 
-<BlogLayout title="Blog">
+<BlogLayout title="Blog" twitterCard="summary">
   <div class="posts">
     {sortedPosts.map(post => (
       <BlogCard
