@@ -1,17 +1,17 @@
-name: Deploy to Cloudflare Pages
+name: Sync External Articles
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'
 
 jobs:
-  deploy:
+  sync:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       deployments: write
-    name: Deploy to Cloudflare Pages
+    name: Sync external articles and deploy
     steps:
       - name: Checkout
         uses: actions/checkout@v4
