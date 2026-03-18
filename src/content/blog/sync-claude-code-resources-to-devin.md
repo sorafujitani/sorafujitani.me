@@ -874,6 +874,3 @@ export DEVIN_API_KEY="your-api-key"
 この仕組みにより、異なる性質を持ったAgentの相互運用、メンテナンスコストの削減にアプローチしています。
 
 自分はこの辺りのAgentを組み込んだworkflow構築が好きな気配もあるので、いろいろ試していきたい。
-
-こっちも読んでね
-[https://zenn.dev/soramarjr/articles/7ea5b05c7ada4d](https://zenn.dev/soramarjr/articles/7ea5b05c7ada4d)
