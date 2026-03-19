@@ -1,8 +1,8 @@
 ---
-title: "phperkaigi2026-speakernote"
-description: ""
+title: "SpeakerNote - prettier/plugin-phpの仕組みと、PHP code format"
+description: "PHPerKaigi2026のSpeakerNoet"
 pubDate: 2026-03-14
-tags: []
+tags: [speakernote, php, javascript, prettier, phperkaigi]
 draft: false
 ---
 
