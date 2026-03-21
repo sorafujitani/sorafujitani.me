@@ -190,4 +190,6 @@ closing ...
 ```
 
 
-Intermediate Representation: インターミディエイト・リプレゼンテーション
+- Intermediate Representation インターミディエイト・リプレゼンテーション
+- nikic/PHP-Parser: 「ニキック」(nikic はセルビア系の開発者 Nikita Popov のハンドルネーム)
+- glayzzle/php-parser: 「グレイズル」
