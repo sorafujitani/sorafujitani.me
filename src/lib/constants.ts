@@ -4,7 +4,6 @@ export const GITHUB_USERNAME = 'sorafujitani';
 export const PULLS_HIDDEN_REPOS: string[] = [];
 export const PULLS_OWN_REPOS: string[] = [
   'sorafujitani/rfmt',
-  'sorafujitani/tech-event-scheduler',
   'sorafujitani/neovimdot',
   'sorafujitani/sorafujitani.me',
 ];
