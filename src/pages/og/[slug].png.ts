@@ -14,12 +14,16 @@ export const getStaticPaths: GetStaticPaths = async () => {
 };
 
 export const GET: APIRoute = async ({ props }) => {
-  const { title, tags } = props as { title: string; tags: string[] };
+  const { title: rawTitle, tags } = props as { title: string; tags: string[] };
+  // Workaround: Satori fails to render JS prototype property names (e.g. "constructor")
+  // as font glyph lookup collides with Object.prototype. Zero-width space breaks the collision.
+  const title = rawTitle.replace(/constructor/gi, 'con\u200Bstructor');
 
-  // Noto Sans JPのフォントを取得
-  const fontData = await fetch(
-    'https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.1/files/noto-sans-jp-japanese-700-normal.woff'
-  ).then((res) => res.arrayBuffer());
+  // フォント取得: Inter (Latin) + Noto Sans JP (日本語)
+  const [fontDataLatin, fontDataJa] = await Promise.all([
+    fetch('https://cdn.jsdelivr.net/npm/@fontsource/inter@5.0.8/files/inter-latin-700-normal.woff').then((res) => res.arrayBuffer()),
+    fetch('https://cdn.jsdelivr.net/npm/@fontsource/noto-sans-jp@5.0.1/files/noto-sans-jp-japanese-700-normal.woff').then((res) => res.arrayBuffer()),
+  ]);
 
   const svg = await satori(
     {
@@ -33,7 +37,7 @@ export const GET: APIRoute = async ({ props }) => {
           justifyContent: 'space-between',
           padding: '60px',
           background: 'linear-gradient(135deg, #0d1117 0%, #0d1a24 40%, #0a1f2e 70%, #0d1117 100%)',
-          fontFamily: 'Noto Sans JP',
+          fontFamily: 'Inter, Noto Sans JP',
         },
         children: [
           // 左上のアクセントライン
@@ -190,8 +194,14 @@ export const GET: APIRoute = async ({ props }) => {
       height: 630,
       fonts: [
         {
+          name: 'Inter',
+          data: fontDataLatin,
+          weight: 700,
+          style: 'normal',
+        },
+        {
           name: 'Noto Sans JP',
-          data: fontData,
+          data: fontDataJa,
           weight: 700,
           style: 'normal',
         },
