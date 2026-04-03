@@ -6,21 +6,18 @@ tags: []
 draft: false
 ---
 
-import LinkCard from '../../components/LinkCard.astro';
-import Tweet from '../../components/Tweet.astro';
-
 年末に北海道で買った3000円くらいのイヤリング、もう片方無くしました。
 fujitani soraです。
 
 二人の前回のやつ
 
-<LinkCard url="https://2323-code.hatenablog.com/entry/2026/01/12/112956" />
+https://2323-code.hatenablog.com/entry/2026/01/12/112956
 
 > 自分が一番穏やかに在れるようなことを考えて、決断していく経験値を積もうと考えました。
 
 自分を信じた方がいいことって案外多いですからね、自戒
 
-<LinkCard url="https://topi-log.hatenablog.jp/entry/2026/01/16/202241" />
+https://topi-log.hatenablog.jp/entry/2026/01/16/202241
 
 > 違います！！跳ね返してきた壁はウォール・ソラです！
 

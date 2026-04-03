@@ -6,8 +6,6 @@ tags: []
 draft: false
 ---
 
-import LinkCard from '../../components/LinkCard.astro';
-
 2025年は北海道で年越しをしました。<br/>
 その備忘録。
 
@@ -34,7 +32,8 @@ Astroで作ってCludflare Pagesにデプロイしてます。<br/>
 友達の推しは那蘭のど...
 
 20回は見せられた<br/>
-<LinkCard url="https://www.youtube.com/watch?v=-oYvgtgFz94" />
+
+https://www.youtube.com/watch?v=-oYvgtgFz94
 
 ## 年越し
 家族で紅白とCDTVをみていた。<br/>

@@ -5,6 +5,9 @@ import sitemap from '@astrojs/sitemap';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import { remarkCodeFilename } from './src/lib/remark/code-filename.ts';
+import { remarkGithubEmbed } from './src/lib/remark/github-embed.ts';
+import { remarkTweetEmbed } from './src/lib/remark/tweet-embed.ts';
+import { remarkLinkCard } from './src/lib/remark/link-card.ts';
 import { transformerFilename } from './src/lib/shiki/filename-transformer.ts';
 
 // https://astro.build/config
@@ -12,12 +15,12 @@ export default defineConfig({
   site: 'https://sorafujitani.me',
   integrations: [
     mdx({
-      remarkPlugins: [remarkGfm, remarkBreaks, remarkCodeFilename],
+      remarkPlugins: [remarkGfm, remarkBreaks, remarkGithubEmbed, remarkTweetEmbed, remarkLinkCard, remarkCodeFilename],
     }),
     sitemap(),
   ],
   markdown: {
-    remarkPlugins: [remarkGfm, remarkBreaks, remarkCodeFilename],
+    remarkPlugins: [remarkGfm, remarkBreaks, remarkGithubEmbed, remarkTweetEmbed, remarkLinkCard, remarkCodeFilename],
     shikiConfig: {
       theme: {
         name: 'custom-cyan-white-theme',

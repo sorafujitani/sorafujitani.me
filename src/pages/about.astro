@@ -90,4 +90,99 @@ const { Content } = await render(about);
     text-decoration: underline;
   }
 
+  /* Link Card */
+  .about-content :global(.link-card) {
+    display: block;
+    background: var(--color-tag-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    overflow: hidden;
+    text-decoration: none !important;
+    margin: 24px 0;
+    transition: border-color 0.2s ease;
+  }
+
+  .about-content :global(.link-card:hover) {
+    border-color: var(--color-accent);
+  }
+
+  .about-content :global(.link-card-content) {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .about-content :global(.link-card-text) {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .about-content :global(.link-card-title) {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--color-heading) !important;
+    margin: 0 0 10px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.4;
+    text-decoration: none !important;
+  }
+
+  .about-content :global(.link-card-description) {
+    font-size: 14px;
+    color: var(--color-text-muted) !important;
+    margin: 0 0 12px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    line-height: 1.6;
+    text-decoration: none !important;
+  }
+
+  .about-content :global(.link-card-url) {
+    font-size: 13px;
+    color: var(--color-text-muted) !important;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas, monospace;
+    text-decoration: none !important;
+  }
+
+  .about-content :global(.link-card-image) {
+    width: 140px;
+    height: 140px;
+    flex-shrink: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--color-tag-bg);
+  }
+
+  .about-content :global(.link-card-image img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  @media (max-width: 768px) {
+    .about-content :global(.link-card-content) {
+      flex-direction: column-reverse;
+      padding: 16px;
+    }
+
+    .about-content :global(.link-card-image) {
+      width: 100%;
+      height: 200px;
+    }
+  }
+
 </style>
