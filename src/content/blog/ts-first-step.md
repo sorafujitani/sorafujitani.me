@@ -1,8 +1,8 @@
 ---
-title: "TypeScriptを難しい話抜きで入門して、何か動くものを作る"
-description: "型の細かい話は省いて、まず書けること・動くものを作れることを重視した入門メモ"
+title: "友達用TypeScript入門"
+description: "細かい話は省いて、まず書けること・動くものを作れることを重視した入門メモ"
 pubDate: 2026-04-08
-tags: [typescript, beginner]
+tags: [typescript]
 draft: false
 ---
 
