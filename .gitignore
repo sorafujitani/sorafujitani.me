@@ -27,3 +27,6 @@ pnpm-debug.log*
 .serena/
 
 docs/devlog/
+
+# benchmark artifacts (Astro 7 migration)
+.bench/

@@ -10,11 +10,11 @@
     "new-post": "bun run scripts/new-post.ts"
   },
   "dependencies": {
-    "@astrojs/mdx": "^4.3.13",
-    "@astrojs/rss": "^4.0.15",
-    "@astrojs/sitemap": "^3.7.0",
+    "@astrojs/mdx": "6.0.0-alpha.0",
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.2",
     "@resvg/resvg-js": "^2.6.2",
-    "astro": "^5.16.6",
+    "astro": "7.0.0-alpha.0",
     "open-graph-scraper": "^6.11.0",
     "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1",
