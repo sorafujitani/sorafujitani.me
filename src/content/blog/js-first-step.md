@@ -1,5 +1,5 @@
 ---
-title: "友達用JavaScript入門 - TypeScriptを始める前に"
+title: "友達用JavaScript入門 - before TypeScript"
 description: "TypeScript入門の前提知識として、JavaScriptの構文・基本をまとめたメモ"
 pubDate: 2026-05-04
 tags: [javascript]
