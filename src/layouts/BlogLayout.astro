@@ -8,9 +8,10 @@ interface Props {
   description?: string;
   image?: string;
   twitterCard?: 'summary' | 'summary_large_image';
+  noindex?: boolean;
 }
 
-const { title, description, image = '/profile.png', twitterCard = 'summary_large_image' } = Astro.props;
+const { title, description, image = '/profile.png', twitterCard = 'summary_large_image', noindex = false } = Astro.props;
 const isHomePage = Astro.url.pathname === '/';
 import { SITE_URL, SITE_NAME } from '@lib/constants';
 
@@ -31,8 +32,10 @@ const ogImage = new URL(image, siteUrl);
     <!-- RSS Feed -->
     <link rel="alternate" type="application/rss+xml" title="Sora Fujitani Blog" href="/rss.xml" />
 
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
     <!-- Canonical URL -->
-    <link rel="canonical" href={canonicalURL} />
+    {!noindex && <link rel="canonical" href={canonicalURL} />}
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />

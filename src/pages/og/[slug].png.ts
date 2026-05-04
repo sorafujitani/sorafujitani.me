@@ -4,20 +4,31 @@ import satori from 'satori';
 import { Resvg } from '@resvg/resvg-js';
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const posts = await getCollection('blog');
-  return posts
+  const blogPosts = await getCollection('blog');
+  const privatePosts = await getCollection('private');
+  const blogParams = blogPosts
     .filter(post => !post.data.externalUrl)
     .map((post) => ({
       params: { slug: post.id },
       props: { title: post.data.title, tags: post.data.tags || [] },
     }));
+  const privateParams = privatePosts
+    .filter(post => !blogPosts.some(b => b.id === post.id))
+    .map((post) => ({
+      params: { slug: post.id },
+      props: { title: post.data.title, tags: post.data.tags || [] },
+    }));
+  return [...blogParams, ...privateParams];
 };
 
 export const GET: APIRoute = async ({ props }) => {
   const { title: rawTitle, tags } = props as { title: string; tags: string[] };
-  // Workaround: Satori fails to render JS prototype property names (e.g. "constructor")
-  // as font glyph lookup collides with Object.prototype. Zero-width space breaks the collision.
-  const title = rawTitle.replace(/constructor/gi, 'con\u200Bstructor');
+  // Workaround: Satori fails to render "constructor" and "__proto__" as text
+  // due to collision with Object.prototype in internal glyph lookup.
+  // Zero-width space breaks the collision without visual impact.
+  const title = rawTitle
+    .replace(/constructor/gi, 'con\u200Bstructor')
+    .replace(/__proto__/g, '__\u200Bproto__');
 
   // フォント取得: Inter (Latin) + Noto Sans JP (日本語)
   const [fontDataLatin, fontDataJa] = await Promise.all([

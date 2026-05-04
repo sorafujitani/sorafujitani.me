@@ -17,7 +17,9 @@ export default defineConfig({
     mdx({
       remarkPlugins: [remarkGfm, remarkBreaks, remarkGithubEmbed, remarkTweetEmbed, remarkLinkCard, remarkCodeFilename],
     }),
-    sitemap(),
+    sitemap({
+      filter: (page) => !page.includes('/private/'),
+    }),
   ],
   markdown: {
     remarkPlugins: [remarkGfm, remarkBreaks, remarkGithubEmbed, remarkTweetEmbed, remarkLinkCard, remarkCodeFilename],
