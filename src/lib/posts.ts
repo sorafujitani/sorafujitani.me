@@ -1,6 +1,12 @@
 import { getCollection } from 'astro:content';
 
 const ZENN_USERNAME = 'soramarjr';
+const NOTE_USERNAME = 'sorafujitani';
+
+// 外部API向けの保護: 個人スケールでも全ページから呼ばれるとビルド毎に数十回叩くため
+// モジュールレベルでビルド全体を1回に圧縮する
+const FETCH_TIMEOUT_MS = 10_000;
+const MAX_PAGES = 50;
 
 interface ZennArticle {
   title: string;
@@ -12,6 +18,23 @@ interface ZennArticle {
 interface ZennResponse {
   articles: ZennArticle[];
   next_page: number | null;
+}
+
+interface NoteArticle {
+  name: string;
+  key: string;
+  status: string;
+  publishAt: string;
+  description: string | null;
+  noteUrl: string;
+}
+
+interface NoteResponse {
+  data: {
+    contents: NoteArticle[];
+    isLastPage: boolean;
+    totalCount: number;
+  };
 }
 
 export interface Post {
@@ -34,9 +57,10 @@ async function fetchZennArticles(): Promise<Post[]> {
   let page = 1;
 
   try {
-    while (true) {
+    for (let i = 0; i < MAX_PAGES; i++) {
       const res = await fetch(
-        `https://zenn.dev/api/articles?username=${ZENN_USERNAME}&order=latest&page=${page}`
+        `https://zenn.dev/api/articles?username=${ZENN_USERNAME}&order=latest&page=${page}`,
+        { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }
       );
       if (!res.ok) break;
 
@@ -47,7 +71,6 @@ async function fetchZennArticles(): Promise<Post[]> {
       page = data.next_page;
     }
   } catch {
-    // API取得失敗時はZenn記事なしで続行
     console.warn('Failed to fetch Zenn articles');
   }
 
@@ -62,9 +85,47 @@ async function fetchZennArticles(): Promise<Post[]> {
   }));
 }
 
-export async function getPublishedPosts(): Promise<Post[]> {
-  const localPosts = await getCollection('blog');
-  const zennPosts = await fetchZennArticles();
+async function fetchNoteArticles(): Promise<Post[]> {
+  const articles: NoteArticle[] = [];
+
+  try {
+    for (let page = 1; page <= MAX_PAGES; page++) {
+      const res = await fetch(
+        `https://note.com/api/v2/creators/${NOTE_USERNAME}/contents?kind=note&page=${page}`,
+        { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) }
+      );
+      if (!res.ok) break;
+
+      const json: NoteResponse = await res.json();
+      articles.push(...json.data.contents);
+
+      if (json.data.isLastPage) break;
+    }
+  } catch {
+    console.warn('Failed to fetch note articles');
+  }
+
+  return articles
+    .filter(article => article.status === 'published')
+    .map(article => ({
+      data: {
+        title: article.name,
+        description: article.description ?? '',
+        pubDate: new Date(article.publishAt),
+        externalUrl: article.noteUrl,
+      },
+      slug: `note-${article.key}`,
+    }));
+}
+
+let cachedPosts: Promise<Post[]> | null = null;
+
+async function computePublishedPosts(): Promise<Post[]> {
+  const [localPosts, zennPosts, notePosts] = await Promise.all([
+    getCollection('blog'),
+    fetchZennArticles(),
+    fetchNoteArticles(),
+  ]);
 
   const posts: Post[] = [
     ...localPosts
@@ -84,6 +145,7 @@ export async function getPublishedPosts(): Promise<Post[]> {
         slug: post.id,
       })),
     ...zennPosts,
+    ...notePosts,
   ];
 
   return posts.sort((a, b) => {
@@ -91,4 +153,9 @@ export async function getPublishedPosts(): Promise<Post[]> {
     if (!a.data.pinned && b.data.pinned) return 1;
     return b.data.pubDate.getTime() - a.data.pubDate.getTime();
   });
+}
+
+export function getPublishedPosts(): Promise<Post[]> {
+  cachedPosts ??= computePublishedPosts();
+  return cachedPosts;
 }
