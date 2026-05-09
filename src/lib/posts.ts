@@ -3,8 +3,9 @@ import { getCollection } from 'astro:content';
 const ZENN_USERNAME = 'soramarjr';
 const NOTE_USERNAME = 'sorafujitani';
 
-// 外部API向けの保護: 個人スケールでも全ページから呼ばれるとビルド毎に数十回叩くため
-// モジュールレベルでビルド全体を1回に圧縮する
+// External API protection: Search.astro inside BlogLayout calls getPublishedPosts()
+// once per built page (~36×), so collapse the whole build to a single fetch via
+// module-level memoization below.
 const FETCH_TIMEOUT_MS = 10_000;
 const MAX_PAGES = 50;
 
