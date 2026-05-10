@@ -23,42 +23,46 @@ TypeScriptで書く前提で作られていて、ルーティングや `c.req.pa
 
 ## セットアップ
 
-[ts-first-step](/blog/ts-first-step/) と同じくBunを使う。Hono公式が用意しているテンプレートから始めると手早い。
+[前回まで](/blog/ts-first-step/) と同じ `tsbook` ディレクトリで進める。今回はHonoを使うので、まずパッケージを足す。
 
 ```bash
-bun create hono@latest hono-playground
+# tsbook/ の中で
+bun add hono
+mkdir 03-hono
+touch 03-hono/index.ts
 ```
 
-ランタイムを聞かれるので、矢印キーで `bun` を選んで決定。
+`bun create hono@latest` で公式テンプレートから始める方法もあるけど、それだと別ディレクトリが切られてシリーズの作業場所が分かれてしまう。本シリーズは1つの `tsbook` で完結させたいので、自前で `index.ts` を書く方針にする。
 
-```
-? Which template do you want to use?
-  cloudflare-workers
-> bun
-  nodejs
-  deno
-  ...
+`03-hono/index.ts` に最小のHonoサーバを書く。
+
+```ts
+// 03-hono/index.ts
+import { Hono } from 'hono'
+
+const app = new Hono()
+
+app.get('/', (c) => {
+  return c.text('Hello Hono!')
+})
+
+export default app
 ```
 
-その後、
+起動はホットリロード付きで。
 
 ```bash
-cd hono-playground
-bun install
-bun run dev
+bun run --hot 03-hono/index.ts
 ```
 
-```
-Started development server: http://localhost:3000
-```
+Bun は `export default` された値が `fetch` メソッドを持つオブジェクトだと認識すると、自動でHTTPサーバとして起動する。デフォルトで `http://localhost:3000` で待ち受ける。
 
 ブラウザで `http://localhost:3000` を開くと `Hello Hono!` と表示される。これが最小のHonoサーバ。
-
-`bun run dev` は起動したまま、別のターミナルで `curl http://localhost:3000` を叩いても同じレスポンスが返ってくる。以降の動作確認はブラウザでもcurlでもどちらでもいい。
+起動したままにして、別のターミナルで `curl http://localhost:3000` を叩いても同じレスポンスが返ってくる。以降の動作確認はブラウザでもcurlでもどちらでもいい。
 
 ## 中身を見る
 
-`src/index.ts` がエントリーポイント。
+`03-hono/index.ts` の内容をもう一度。
 
 ```ts
 import { Hono } from 'hono'
@@ -78,9 +82,9 @@ export default app
 
 ts-first-stepでは触れなかった `import` 構文。
 
-`hono` というnpmパッケージから `Hono` という名前のものを取り込む、という意味。Bunが裏で `bun add hono` 相当をやってくれているので、別ファイルから `Hono` を使えるようになっている。
+`hono` というnpmパッケージから `Hono` という名前のものを取り込む、という意味。先ほど `bun add hono` でインストールしたので、別ファイルから `Hono` を使えるようになっている。
 
-逆方向の `export` もこのファイルの最終行で使われていて、`export default app` で「このファイルの代表エクスポートはこの `app` です」と宣言している。Bunは `export default` された値が `fetch` メソッドを持つオブジェクト（Honoの `app` がまさにそれ）なら、それをHTTPサーバとして起動する。だから `bun run dev` でサーバが立つ。
+逆方向の `export` もこのファイルの最終行で使われていて、`export default app` で「このファイルの代表エクスポートはこの `app` です」と宣言している。Bunは `export default` された値が `fetch` メソッドを持つオブジェクト（Honoの `app` がまさにそれ）なら、それをHTTPサーバとして起動する。だから `bun run --hot 03-hono/index.ts` でサーバが立つ。
 
 ### `const app = new Hono()`
 
@@ -94,7 +98,7 @@ ts-first-stepでは触れなかった `import` 構文。
 
 ## ルートを足す
 
-`src/index.ts` に追記してみる。
+`03-hono/index.ts` に追記してみる。
 
 ```ts
 app.get('/hello', (c) => {
@@ -111,7 +115,7 @@ app.get('/api/health', (c) => {
 })
 ```
 
-`bun run dev` は `--hot` オプション付きで起動しているので、ファイルを保存すると自動でリロードされる。
+`bun run --hot` で起動しているので、ファイルを保存すると自動でリロードされる。
 
 ```bash
 curl http://localhost:3000/hello
@@ -186,7 +190,7 @@ app.get('/api/me', (c) => {
 ts-first-stepで作ったタスク管理ツールをHTTPで叩けるようにする。
 `Task` の interface はそのまま流用。配列をメモリに持って、HTTPでCRUDする最小構成。
 
-`src/index.ts` を以下に書き換える。
+`03-hono/index.ts` を以下に書き換える。
 
 ```ts
 import { Hono } from 'hono'
@@ -270,7 +274,7 @@ curl http://localhost:3000/tasks/999
 # {"error":"not found"}
 ```
 
-`bun run dev` を止めるとメモリの中身も消えるので、再起動するとタスクは空に戻る。永続化はDB導入の話なのでここでは触れない。
+サーバを止めるとメモリの中身も消えるので、再起動するとタスクは空に戻る。永続化はDB導入の話なのでここでは触れない。
 
 ## ここで出てきたTypeScriptの新顔
 
@@ -322,10 +326,10 @@ const body = await c.req.json<CreateTaskInput>()
 ### `import` / `export` (再掲)
 
 `import { Hono } from 'hono'` で外部パッケージから機能を取り込む。
-自分で書いたファイルを別ファイルから使いたい時にもこの構文を使う。例えば `src/tasks.ts` にタスク周りの処理をまとめて、
+自分で書いたファイルを別ファイルから使いたい時にもこの構文を使う。例えば `03-hono/tasks.ts` にタスク周りの処理をまとめて、
 
 ```ts
-// src/tasks.ts
+// 03-hono/tasks.ts
 export interface Task {
   id: number
   title: string
@@ -336,7 +340,7 @@ export const tasks: Task[] = []
 ```
 
 ```ts
-// src/index.ts
+// 03-hono/index.ts
 import { Task, tasks } from './tasks'
 ```
 
@@ -344,9 +348,9 @@ import { Task, tasks } from './tasks'
 
 ## 動作の振り返り
 
-`bun run dev` でやっていることをまとめると、
+`bun run --hot 03-hono/index.ts` でやっていることをまとめると、
 
-1. Bunが `src/index.ts` を読み込む
+1. Bunが `03-hono/index.ts` を読み込む
 2. `import` で `hono` パッケージから `Hono` クラスを取り込む
 3. `new Hono()` で `app` を作り、`app.get(...)` / `app.post(...)` などでルートを登録する
 4. `export default app` でBunに渡す

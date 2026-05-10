@@ -201,12 +201,11 @@ type Status = typeof STATUSES2[number]
 
 ## Part 2: tsconfig を読む
 
-`tsconfig.json` は TypeScript の動作を制御するファイル。`bun init` した時点で生成されている。
-
-抜粋するとこんな中身。
+`tsconfig.json` は TypeScript の動作を制御するファイル。第1章で `bun init -y` した時点で `tsbook/tsconfig.json` が生成されている。
+今回はこのファイルを開いて、抜粋するとこんな中身。
 
 ```jsonc
-// tsconfig.json
+// tsbook/tsconfig.json
 {
   "compilerOptions": {
     "target": "ESNext",
@@ -308,14 +307,23 @@ Bun/Node.jsのサーバ: `DOM` は基本不要、`ESNext` だけでよい。
 - `moduleResolution`: `import './foo'` をどう解決するか。Bun / Vite / 最近のbundler系は `"bundler"`、Node.js直なら `"nodenext"`
 - `paths`: importを相対パス地獄から救うエイリアス。`import X from "@components/X"` のような書き方ができるようになる
 
-このあたりは「動かないとき調べる」順でよくて、最初は `bun init` の生成値のままで困らない。
+このあたりは「動かないとき調べる」順でよくて、最初は `bun init -y` の生成値のままで困らない。
 
 ## 両者を合わせる: なぜセットなのか
 
 最後に、Part 1 と Part 2 を1つに束ねた例。
-`Task` を1つ定義して、ユーティリティ型で派生させて、ジェネリック関数で受け取って、`strictNullChecks` + `noUncheckedIndexedAccess` で守られている、という状態。
+手元で試すなら、`tsbook/tsconfig.json` の `compilerOptions` に `"noUncheckedIndexedAccess": true` を1行足してから、
+
+```bash
+# tsbook/ の中で
+mkdir 04-types
+touch 04-types/compose.ts
+```
+
+`04-types/compose.ts` に以下を書く。`Task` を1つ定義して、ユーティリティ型で派生させ、ジェネリック関数で受け取って、`strictNullChecks` + `noUncheckedIndexedAccess` で守られている、という状態。
 
 ```ts
+// 04-types/compose.ts
 interface Task {
   id: number
   title: string
@@ -378,4 +386,20 @@ if (t !== undefined) {                              // strictNullChecksの絞り
 [TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html) の "Type Manipulation" 章と、[TSConfig Reference](https://www.typescriptlang.org/tsconfig/) が一次情報として一番まとまっている。
 
 [1: before TypeScript](/blog/js-first-step/) → [2: TypeScript](/blog/ts-first-step/) → [3: Hono](/blog/hono-first-step/) → 今回 で「TypeScriptで動くものを作って、設定で守りを固める」ところまで来た。
+ここまでで `tsbook/` の中身はだいたいこうなっているはず。
+
+```
+tsbook/
+├── package.json
+├── tsconfig.json     # 第4章で noUncheckedIndexedAccess を追記
+├── 01-js/
+│   └── index.js
+├── 02-ts/
+│   └── index.ts
+├── 03-hono/
+│   └── index.ts
+└── 04-types/
+    └── compose.ts
+```
+
 次に何を学ぶかは、今書いているコードで一番困っているところに依存するので、自分の手元のコードを見て選んでください。
