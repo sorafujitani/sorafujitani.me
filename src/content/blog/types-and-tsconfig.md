@@ -1,6 +1,6 @@
 ---
 title: "友達用TypeScript入門4 - composing types and tsconfig"
-description: "型を組み立てるスキルと、tsconfigで厳しさを上げる設定を両輪でまとめたメモ"
+description: "型を組み立てる練習と、tsconfigを実際に触って挙動を比べる回。動かして体感するハンズオン編"
 pubDate: 2026-05-09
 tags: [typescript]
 draft: false
@@ -9,209 +9,172 @@ draft: false
 [友達用TypeScript入門3](/blog/hono-first-step/) の続編。
 これまでは「型を書く」「型のついた値を使う」が中心だった。今回は
 
-- 型を **組み立てる** (`A | B`、`extends`、ジェネリック、ユーティリティ型 など)
-- tsconfigで **TypeScriptの厳しさを上げる**
+- 型を **組み立てる** (union、ユーティリティ型、ジェネリックなど)
+- tsconfigを **実際に触って** 挙動の違いを見る
 
 の2本立てで進める。
-この2つはセットで意味があって、組み立てた型がちゃんと働くかどうかは tsconfig の設定で決まるし、tsconfig をいくら締めても型を平らな `string` だけで書いていると恩恵が出ない。両輪と思って読んでほしい。
+用語を一気に並べると重いので、`tsbook/04-types/` に小さなファイルをいくつか作って、**わざとエラーを出す → 直す → tsconfigを書き換える** を繰り返しながら進める。
+エディタの赤い波線と `bun run` した時の出力、両方を見比べることで、「TypeScriptが何を守ってくれているのか」「tsconfigが何を切り替えているのか」が具体的に見える。
 
-## Part 1: 型を組み立てる
+VSCodeなどTypeScript対応エディタで、ファイルを保存すると数秒で型エラーが反映される、という前提で書いている。
 
-### `type` という書き方
+## 準備
 
-ts-first-step では `interface` を使ってオブジェクトの形を定義した。
-TypeScriptにはもう一つ、`type` というキーワードがあって、こちらは「組み合わせた型に名前を付ける」用途で使う。
-
-```ts
-interface User {           // オブジェクトの形を表すならこっち
-  name: string
-  level: number
-}
-
-type Status = "todo" | "doing" | "done"  // 後述するunionなどはこっち
+```bash
+# tsbook/ の中で
+mkdir 04-types
 ```
 
-ざっくり「オブジェクトの形 = `interface`、それ以外の組み立て型 = `type`」と覚えておけば困らない。
+以降、`04-types/` の中に試したいトピックごとに小さなファイルを足していく。
 
-### Union Type — 「AまたはB」
+## Part 1: 型を組み立てる - 動かしながら
 
-`|` で繋ぐと「どちらかの型」になる。
+### `type` というキーワード
+
+ts-first-stepでは `interface` でオブジェクトの形を定義した。
+TypeScriptには `type` というもう1つの書き方があって、こちらは「組み合わせた型に名前を付ける」用途で使う。
 
 ```ts
-function format(value: string | number): string {
-  return String(value)
-}
-
-format("hello") // OK
-format(42)      // OK
-format(true)    // エラー: boolean は string | number に割り当てられない
+interface User { name: string; level: number }   // オブジェクトの形 → interface
+type Status = "todo" | "doing" | "done"           // それ以外の組み立て型 → type
 ```
 
-ts-first-stepで出てきた `Task | undefined` も同じ仕組み。「`Task` または `undefined`」という意味だった。
+ここから出てくる union や Pick の説明はぜんぶ `type` 側なので、これだけ先に紹介しておく。
 
-### リテラル型
+### 実験1: union と literal — 値そのものを型にする
 
-`"todo"` のような具体値そのものを型として扱える。
+`04-types/status.ts` を作って書き写す。
 
 ```ts
+// 04-types/status.ts
 type Status = "todo" | "doing" | "done"
 
 let s: Status = "todo"
-s = "done"
-s = "wip" // エラー: '"wip"' は Status に割り当てられない
+s = "wip"
 ```
 
-文字列・数値・booleanの「特定の値」を束ねる、という感覚。
-状態管理が型でガードされるので、`if (status === "wpi")` みたいなtypoが書いた瞬間にエラーになる。
+保存すると `"wip"` の行に赤い波線が出る。
 
-### 判別共用体 (discriminated union)
+```
+Type '"wip"' is not assignable to type 'Status'.
+```
 
-「成功なら値、失敗ならエラー」のように **形が違うレコードの集合** を表したい時の定番。
+`Status` という名前が、3つの **値そのもの** の集合になっている。
+`"todo"` のような値リテラルそのものを型として扱うのが **リテラル型**。それを `|` で繋ぐと「どれか1つ」の型になる(これが **union**)。
+
+`s = "doing"` などに直すとエラーが消える。
+`s = "` まで打って候補が3つだけ出るのも一度確認しておくと、エディタの補完が型でガードされている感じが掴める。
+
+### 実験2: 判別共用体 (discriminated union) — 形違いの集合を絞り込む
+
+`04-types/result.ts` を作る。
 
 ```ts
+// 04-types/result.ts
 type Result =
   | { ok: true;  value: number }
   | { ok: false; error: string }
 
 function show(r: Result): void {
   if (r.ok) {
-    console.log(r.value)   // ここでは value にアクセスできる
+    console.log(r.value)
+    console.log(r.error)
   } else {
-    console.log(r.error)   // ここでは error にアクセスできる
+    console.log(r.error)
+    console.log(r.value)
   }
 }
 ```
 
-`r.ok` の値で TypeScript が分岐先の形を絞り込んでくれる。
-`if (r.ok)` の中で `r.error` にアクセスしようとするとエラーになるし、逆もしかり。これを **絞り込み (narrowing)** と呼ぶ。
-APIの戻り値、フォームの状態、フェッチの状態 (loading / success / error) など、出番がとても多い。
+保存すると、`if (r.ok)` の中の `r.error` と、`else` の中の `r.value` にそれぞれエラーが出る。
 
-### Intersection Type — 「AかつB」
-
-`&` で繋ぐと「両方の性質を持つ型」になる。
-
-```ts
-interface Task {
-  id: number
-  title: string
-}
-
-type WithCreatedAt = Task & { createdAt: Date }
-
-const t: WithCreatedAt = {
-  id: 1,
-  title: "...",
-  createdAt: new Date(),
-}
+```
+Property 'error' does not exist on type '{ ok: true; value: number; }'.
+Property 'value' does not exist on type '{ ok: false; error: string; }'.
 ```
 
-`Task` に「`createdAt` も持っている」という条件を足した型ができる。
+`r.ok` の値で TypeScript が自動的に分岐先の形を絞ってくれている。
+`if (r.ok)` の中では「成功側の形」だけ、`else` の中では「失敗側の形」だけが見えている。これを **絞り込み (narrowing)** と呼ぶ。
 
-### interface の extends
+APIの戻り値、フォームの状態、フェッチのloading/success/errorの状態管理など、出番がとても多い。
+2行を消すとエラーがなくなる。
 
-オブジェクトの形を拡張するなら `interface` の `extends` のほうが自然。
+### 実験3: Pick / Omit / Partial — `Task` から派生型を作る
 
-```ts
-interface Task {
-  id: number
-  title: string
-}
-
-interface DatedTask extends Task {
-  createdAt: Date
-}
-```
-
-`extends` で `Task` に `createdAt` を足した interface を作っている。
-`Task` の項目が変わったら `DatedTask` 側にも反映される。
-
-### ジェネリック関数
-
-`<T>` を関数定義の頭に書くと、「呼び出し時に決まる型」を扱える。
+TypeScriptが標準で用意している、型を加工する型。`04-types/utility.ts` を作る。
 
 ```ts
-function first<T>(items: T[]): T | undefined {
-  return items[0]
-}
-
-const n = first([1, 2, 3])     // T は number → 戻り値は number | undefined
-const s = first(["a", "b"])    // T は string → 戻り値は string | undefined
-```
-
-Hono入門で出てきた `c.req.json<T>()` は、Hono側がこのパターンで作っている関数。
-「呼び出し側で型を渡せば、その型として扱う」が `<T>` の役割。
-
-### ユーティリティ型: Partial / Pick / Omit
-
-TypeScriptが標準で用意している、型を加工する関数のような型。
-
-```ts
+// 04-types/utility.ts
 interface Task {
   id: number
   title: string
   done: boolean
 }
 
-// 全プロパティをオプショナルに
-type TaskPatch = Partial<Task>
-// = { id?: number; title?: string; done?: boolean }
+type CreateTaskInput = Omit<Task, "id" | "done">
+//   = { title: string }
 
-// 一部だけ抜き出す
-type TaskListItem = Pick<Task, "id" | "title">
-// = { id: number; title: string }
+type TaskPatch = Partial<Pick<Task, "title" | "done">>
+//   = { title?: string; done?: boolean }
 
-// 一部を除外
-type CreateTaskInput = Omit<Task, "id">
-// = { title: string; done: boolean }
+const input: CreateTaskInput = { title: "test", id: 1 }  // (a)
+const patch: TaskPatch       = { title: "x" }            // (b) OK
 ```
 
-`Task` という1つの定義から、用途別の型を派生させられる。
-APIの「作成時のbody」「更新時のbody」「一覧の表示用」みたいに微妙に違う型が、本体の `Task` を1箇所直せば全部追従する、というのがこの嬉しさ。
+`(a)` の行にエラーが出る。
 
-### typeof — 値から型を取る
+```
+Object literal may only specify known properties, and 'id' does not exist in type 'CreateTaskInput'.
+```
+
+`Omit<Task, "id" | "done">` で `id` と `done` を除外した型を作っているので、そこに `id` を入れるのは契約違反。
+`Pick<Task, "title" | "done">` は逆に `title` と `done` だけを抜き出した型。`Partial<...>` でそれを全部オプショナルに変えている。
+
+(a) を `{ title: "test" }` に直すとエラーが消える。
+
+`Task` という1つの定義から、用途別の型を派生させられるのがこれの嬉しさ。
+本体の `Task` を1箇所直せば、`CreateTaskInput` も `TaskPatch` も自動で追従する。APIの「作成時のbody」「更新時のbody」「一覧の表示用」みたいに微妙に違う型が、1箇所の更新で揃う。
+
+### 実験4: ジェネリック関数 — 呼び出し時に型が決まる
+
+第3章で `c.req.json<T>()` の `<T>` がジェネリクスだ、という話だけ出てきた。今度は自分で書いてみる。`04-types/generic.ts`:
 
 ```ts
-const defaultConfig = {
-  port: 3000,
-  host: "localhost",
+// 04-types/generic.ts
+function first<T>(items: T[]): T | undefined {
+  return items[0]
 }
 
-type Config = typeof defaultConfig
-// = { port: number; host: string }
+const n = first([1, 2, 3])
+const s = first(["alice", "bob"])
+const t = first([{ id: 1, title: "test" }])
 ```
 
-すでにある値の形を、もう一度 interface で書き直すのは無駄。`typeof` を使うと「今ある値の型をそのまま型として使う」ことができる。
+`n`、`s`、`t` のそれぞれにマウスをホバーして、推論されている型を見てみる。
 
-### as const — リテラルとして固定する
+- `n: number | undefined`
+- `s: string | undefined`
+- `t: { id: number; title: string } | undefined`
 
-```ts
-const STATUSES = ["todo", "doing", "done"]
-// 推論される型: string[]
+呼び出し側で渡された配列の中身の型から、`<T>` が自動で決まる。
+1つの関数定義で、どんな型の配列にも使えるのがジェネリックの嬉しさ。
 
-const STATUSES2 = ["todo", "doing", "done"] as const
-// 推論される型: readonly ["todo", "doing", "done"]
+ここまでがPart 1。型を組み立てる側のスキルは、最低限これくらいで一気に世界が広がる。
 
-type Status = typeof STATUSES2[number]
-// = "todo" | "doing" | "done"
-```
+## Part 2: tsconfig を「触って」確かめる
 
-通常の `const` で配列を書くと中身は `string[]` 扱いになるが、`as const` を付けるとそのままの形が型に乗る。
-そこから `[number]` (添字アクセス) で要素の型を取れば、リテラル型のunionが手に入る。
-「定数の配列があって、それと同じ集合を型として使いたい」時の定番パターン。
+ここからが本題の、tsconfigを実際に編集して挙動の違いを見る回。
 
-## Part 2: tsconfig を読む
+### 現状の中身を確認
 
-`tsconfig.json` は TypeScript の動作を制御するファイル。第1章で `bun init -y` した時点で `tsbook/tsconfig.json` が生成されている。
-今回はこのファイルを開いて、抜粋するとこんな中身。
+`tsbook/tsconfig.json` を開く。`bun init -y` の生成値だと、抜粋でこんな感じ。
 
 ```jsonc
-// tsbook/tsconfig.json
 {
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "lib": ["ESNext"],
     "strict": true,
     "skipLibCheck": true,
     "noEmit": true
@@ -220,186 +183,192 @@ type Status = typeof STATUSES2[number]
 }
 ```
 
-ここで「TypeScriptの厳しさをどこまで上げるか」「どのJavaScriptに変換するか」「どのAPIを使えると思っていいか」を決める。
-組み立てた型をちゃんと働かせるには、この設定が締まっていることが前提になる。
+注目するのは `"strict": true`。これ1行で、`strictNullChecks` / `noImplicitAny` / `strictFunctionTypes` など、TypeScriptの主要な厳格チェックがまとめてONになっている。
 
-### `"strict": true`
+ここからは「あえて切ってみる」「あえて追加してみる」を交互にやる。
 
-これ1行で、TypeScriptの主要な厳格チェックがまとめてONになる。
-含まれるオプションは、
+### 実験5: `strict` を切ってみる
 
-- `noImplicitAny`: 型を書き忘れて `any` になる状況をエラーにする
-- `strictNullChecks`: `null` / `undefined` を他の型に紛れ込ませない
-- `strictFunctionTypes`: 関数型のチェックを厳しくする
-- `strictBindCallApply`: `.call` / `.bind` / `.apply` の引数を型チェック
-- `strictPropertyInitialization`: classのプロパティ初期化漏れをエラーにする
-- `noImplicitThis`: `this` が暗黙の `any` になるのを防ぐ
-- `alwaysStrict`: 各ファイルを ECMAScript strict mode で解釈する
-- `useUnknownInCatchVariables`: `try/catch` の `e` を `any` ではなく `unknown` にする
-
-新規プロジェクトなら、まず `strict: true` から始めるのが基本。後から個別に切ることはできても、最初から緩い設定だと、あとから型を足しても効きが弱い。
-
-### `strictNullChecks` の効き目
-
-OFFだとどうなるか体験してみるとわかりやすい。
+まず壊れるコードを用意する。`04-types/null-experiment.ts`:
 
 ```ts
-// strictNullChecks: false の世界
-function getTitle(task: Task | undefined): string {
-  return task.title  // エラーにならない (実行時には壊れる)
+// 04-types/null-experiment.ts
+function getTitle(task: { title: string } | undefined): string {
+  return task.title
 }
+
+console.log(getTitle(undefined))
 ```
 
-```ts
-// strictNullChecks: true の世界
-function getTitle(task: Task | undefined): string {
-  return task.title  // エラー: 'task' is possibly 'undefined'
-}
+保存すると `task.title` の行にエラーが出る。
+
+```
+'task' is possibly 'undefined'.
 ```
 
-ts-first-stepでやった `if (task !== undefined)` のチェックが必要になるのは、この設定がONだから。
-逆にOFFだと、TypeScriptは型としては書かせてくれるけど、実行時には `Cannot read properties of undefined` で落ちるコードを通してしまう。
-**`strict: true` を切ってほしくない** 最大の理由がこれ。
-
-### `noUncheckedIndexedAccess` (`strict` には含まれない)
-
-配列のインデックスアクセスや `Record<string, T>` のキーアクセスが `T | undefined` になる。
-
-```ts
-const items = ["a", "b", "c"]
-
-// noUncheckedIndexedAccess: false (デフォルト)
-const x: string = items[10]  // エラーにならない (実態は undefined)
-
-// noUncheckedIndexedAccess: true
-const x: string = items[10]  // エラー: string | undefined を string に代入できない
-```
-
-実行時クラッシュ源として `undefined` の次に多いのが「配列の存在しない添字」。
-これをONにしておくと、TypeScriptが事前に `undefined` チェックを強制してくれる。
-`strict: true` には **含まれていない** ので、別途 `"noUncheckedIndexedAccess": true` を足すのが推奨。
-
-### `target` と `lib`
-
-```jsonc
-"target": "ESNext",
-"lib": ["ESNext"]
-```
-
-- `target`: TypeScriptがどのJSバージョンに変換するか。古い環境(IE11など)向けに書くなら `ES5` のように落とす
-- `lib`: コードから「使えると思っていいAPI」のリスト。`DOM` を入れるとブラウザAPI(`document`, `window` など)が型として使える
-
-ブラウザで動くフロントエンド: `lib` に `DOM` が必要。
-Bun/Node.jsのサーバ: `DOM` は基本不要、`ESNext` だけでよい。
-
-「使えないはずのAPIがエラーにならない」「使えるはずのAPIがエラーになる」という症状は、だいたい `lib` の設定。
-
-### `moduleResolution` と path alias
-
-```jsonc
-"moduleResolution": "bundler",
-"baseUrl": ".",
-"paths": {
-  "@components/*": ["src/components/*"]
-}
-```
-
-- `moduleResolution`: `import './foo'` をどう解決するか。Bun / Vite / 最近のbundler系は `"bundler"`、Node.js直なら `"nodenext"`
-- `paths`: importを相対パス地獄から救うエイリアス。`import X from "@components/X"` のような書き方ができるようになる
-
-このあたりは「動かないとき調べる」順でよくて、最初は `bun init -y` の生成値のままで困らない。
-
-## 両者を合わせる: なぜセットなのか
-
-最後に、Part 1 と Part 2 を1つに束ねた例。
-手元で試すなら、`tsbook/tsconfig.json` の `compilerOptions` に `"noUncheckedIndexedAccess": true` を1行足してから、
+このエラーが出るのは `strict: true` (の中の `strictNullChecks`) のおかげ。
+**ここで実際に走らせてみる:**
 
 ```bash
-# tsbook/ の中で
-mkdir 04-types
-touch 04-types/compose.ts
+bun run 04-types/null-experiment.ts
 ```
 
-`04-types/compose.ts` に以下を書く。`Task` を1つ定義して、ユーティリティ型で派生させ、ジェネリック関数で受け取って、`strictNullChecks` + `noUncheckedIndexedAccess` で守られている、という状態。
+```
+TypeError: Cannot read properties of undefined (reading 'title')
+```
+
+エディタの警告が言っていたとおり、実行時にクラッシュした。
+ポイントは、**Bunは型エラーがあっても実行はする**こと。型チェックを走らせているのはエディタ側のTypeScript Language Serverで、Bunはそれを見ない。
+つまりtsconfigの効果は「壊れたコードを止める」ことではなく、「壊れていることをコードを書いている時点で教えてくれる」ことに限られる。
+
+ここで `tsbook/tsconfig.json` を開いて、`"strict": true` を `"strict": false` に書き換えて保存する。
+`null-experiment.ts` に戻ると、**エディタの赤い波線が消える**。型エラーがなくなったように見える。
+
+もう一度走らせると、
+
+```bash
+bun run 04-types/null-experiment.ts
+```
+
+```
+TypeError: Cannot read properties of undefined (reading 'title')
+```
+
+実行結果は同じ。クラッシュする。
+つまり「壊れているかどうか」は変わっていない。変わったのは「壊れていることをコードを書いている時点で教えてくれるかどうか」だけ。
+
+`strict` を切るのは「自分の目に問題が見えなくなる」だけで、バグはそこに残ったまま。
+**`strict: true` に戻して保存しておく。**
+
+参考までに、`strict: true` でまとめてONになる主なフラグ:
+
+- `strictNullChecks`: `null` / `undefined` を他の型に紛れ込ませない (今回見たやつ)
+- `noImplicitAny`: 引数の型を書き忘れて `any` になるのをエラーにする
+- `strictFunctionTypes`: 関数型のチェックを厳しくする
+- `strictPropertyInitialization`: classのプロパティ初期化漏れをエラーにする
+- `useUnknownInCatchVariables`: `try/catch` の `e` を `any` ではなく `unknown` にする
+- ほか数項目
+
+新規プロジェクトはまず `"strict": true` から始めるのが基本。
+
+### 実験6: `noUncheckedIndexedAccess` を入れてみる
+
+`strict: true` には **含まれていない** 別系統のチェック。`04-types/array-experiment.ts` を作る。
 
 ```ts
-// 04-types/compose.ts
-interface Task {
-  id: number
-  title: string
-  done: boolean
-}
+// 04-types/array-experiment.ts
+const items = ["a", "b", "c"]
+const x: string = items[10]
+console.log(x.toUpperCase())
+```
 
-type CreateTaskInput = Omit<Task, "id" | "done">
-type TaskPatch = Partial<Pick<Task, "title" | "done">>
+保存しても、**今はエラーが出ない**。`items[10]` の戻り値はデフォルトでは `string` 扱いになっている(添字が範囲外でもTSは気にしない)。
 
-const tasks: Task[] = []
-let nextId = 1
+走らせると、
 
-function createTask(input: CreateTaskInput): Task {
-  const task: Task = { id: nextId++, title: input.title, done: false }
-  tasks.push(task)
-  return task
-}
+```bash
+bun run 04-types/array-experiment.ts
+```
 
-function patchTask(id: number, patch: TaskPatch): Task | undefined {
-  const task = tasks.find((t) => t.id === id)
-  if (task === undefined) return undefined          // ← strictNullChecks
-  if (patch.title !== undefined) task.title = patch.title
-  if (patch.done !== undefined) task.done = patch.done
-  return task
-}
+```
+TypeError: Cannot read properties of undefined (reading 'toUpperCase')
+```
 
-function first<T>(items: T[]): T | undefined {
-  return items[0]                                   // ← noUncheckedIndexedAccess
-}
+`items[10]` は実態としては `undefined` だった。TypeScriptは、デフォルトのままだと **これに気づいてくれない**。
 
-const t = first(tasks)                              // Task | undefined
-if (t !== undefined) {                              // strictNullChecksの絞り込み
-  console.log(t.title)
+ここで `tsbook/tsconfig.json` の `compilerOptions` の中に1行足す。
+
+```jsonc
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,    // ← この行を追加
+    // ...
+  }
 }
 ```
 
-短いコードに、効いていることがいくつも詰まっている。
+保存して `array-experiment.ts` に戻ると、**赤い波線が出る**。
 
-- `Omit` / `Pick` / `Partial` で `Task` から派生型を作る → **型を組み立てる** 側
-- `<T>` のジェネリック関数で「中身の型」を保ったまま値を扱う → **型を組み立てる** 側
-- `tasks.find` の戻り値が `Task | undefined` になり、`if (task === undefined)` のチェックが必要になる → **tsconfig** 側 (`strictNullChecks`)
-- `items[0]` が `T | undefined` になる → **tsconfig** 側 (`noUncheckedIndexedAccess`)
+```
+Type 'string | undefined' is not assignable to type 'string'.
+```
 
-**型を組み立てる** 側で「`Task` の派生・ジェネリックの抽象化」を表現し、**tsconfig** 側で「`undefined` を見逃さない」を強制する。
-両方が揃ってはじめて、コードを書いた瞬間にバグを止めてくれる体験になる。
-`strict: true` だけONになっているプロジェクトは多いけど、`noUncheckedIndexedAccess` は意外と切れているので、自分の手元の `tsconfig.json` を一度開いてみてほしい。
+ONの世界では、配列のインデックスアクセスの戻り値が `T | undefined` になる。
+`items[10]` の戻り値は `string | undefined` 扱いになり、`undefined` を考慮しないコードはエラーになる。
 
-## 今回触れなかったこと
+```ts
+const x = items[10]            // string | undefined
+if (x !== undefined) {
+  console.log(x.toUpperCase()) // ここでは string として扱える
+}
+```
 
-- 条件型 (`T extends U ? X : Y`) と `infer`
-- mapped type (`{ [K in keyof T]: ... }`)
-- template literal types (`` `${string}-id` ``)
-- `keyof` / `Record<K, V>` / `Readonly<T>` / `ReturnType<T>` / `Awaited<T>` などその他のユーティリティ型
-- ジェネリック制約 (`<T extends Y>`)
-- `satisfies` 演算子
-- declaration merging / module augmentation
-- `tsconfig.json` の `references` / `composite` (monorepo / 増分ビルド系)
+このように書き換えるとエラーが消える。
 
-このあたりは「ライブラリを自作する」「型レベルで何かを計算する」段階で必要になる。
-[TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html) の "Type Manipulation" 章と、[TSConfig Reference](https://www.typescriptlang.org/tsconfig/) が一次情報として一番まとまっている。
+実行時クラッシュ源として `undefined` の次に多いのが「配列の存在しない添字」。
+`noUncheckedIndexedAccess` をONにしておくと、TypeScriptが事前に `undefined` チェックを強制してくれる。
+`strict: true` には含まれないので、自分で1行足す必要がある。
 
-[1: before TypeScript](/blog/js-first-step/) → [2: TypeScript](/blog/ts-first-step/) → [3: Hono](/blog/hono-first-step/) → 今回 で「TypeScriptで動くものを作って、設定で守りを固める」ところまで来た。
-ここまでで `tsbook/` の中身はだいたいこうなっているはず。
+### 設定の効果まとめ
+
+ここまでの2実験で見えたこと:
+
+- tsconfigは **「エディタで何をエラーとして見せるか」** を制御するもの
+- 実行時の挙動は変わらない。壊れたコードはtsconfigをどう設定しても壊れたまま
+- だから「設定を緩める」は「自分の目に問題が見えなくなる」だけで、バグは残ったまま
+- `strict: true` だけだと埋まらない部分があり、`noUncheckedIndexedAccess` のような追加フラグで補う
+
+新規プロジェクトなら、
+
+```jsonc
+{
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true
+  }
+}
+```
+
+の2つは入れておいて損がない。
+
+## ここまでに作ったファイル
 
 ```
 tsbook/
 ├── package.json
-├── tsconfig.json     # 第4章で noUncheckedIndexedAccess を追記
-├── 01-js/
-│   └── index.js
-├── 02-ts/
-│   └── index.ts
-├── 03-hono/
-│   └── index.ts
+├── tsconfig.json     # 第4章で noUncheckedIndexedAccess: true を追加した
+├── 01-js/index.js
+├── 02-ts/index.ts
+├── 03-hono/index.ts
 └── 04-types/
-    └── compose.ts
+    ├── status.ts
+    ├── result.ts
+    ├── utility.ts
+    ├── generic.ts
+    ├── null-experiment.ts
+    └── array-experiment.ts
 ```
 
-次に何を学ぶかは、今書いているコードで一番困っているところに依存するので、自分の手元のコードを見て選んでください。
+`Task` を1つ定義して、用途別の派生型を `Pick` / `Omit` / `Partial` で作って、ジェネリック関数で受け取って、`strictNullChecks` と `noUncheckedIndexedAccess` で `undefined` を見逃さない、という最低限のセットが手元で動く状態になった。
+
+## 今回触れなかったこと
+
+- intersection types (`A & B`) と `interface` の `extends`
+- `typeof` で値から型を取る
+- `as const` でリテラルとして固定する
+- `keyof` / `Record<K, V>` / `Readonly<T>` / `ReturnType<T>` / `Awaited<T>` などその他のユーティリティ型
+- ジェネリック制約 (`<T extends Y>`)
+- 条件型 (`T extends U ? X : Y`) と `infer`
+- mapped type (`{ [K in keyof T]: ... }`)
+- template literal types (`` `${string}-id` ``)
+- `satisfies` 演算子
+- declaration merging / module augmentation
+- `target` / `lib` / `moduleResolution` / `paths` などその他のtsconfigオプション
+- `tsconfig.json` の `references` / `composite` (monorepo / 増分ビルド系)
+
+このあたりは「ライブラリを自作する」「型レベルで何かを計算する」段階で必要になってくる。
+[TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html) の "Type Manipulation" 章と、[TSConfig Reference](https://www.typescriptlang.org/tsconfig/) が一次情報として一番まとまっている。
+
+[1: before TypeScript](/blog/js-first-step/) → [2: TypeScript](/blog/ts-first-step/) → [3: Hono](/blog/hono-first-step/) → 今回 で「TypeScriptで動くものを作って、設定で守りを固める」ところまで来た。
+次に何を学ぶかは、今書いているコードで一番困っているところに依存するので、自分の手元のコードを見て選んでほしい。
