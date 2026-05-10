@@ -1,7 +1,7 @@
 ---
-title: "友達用TypeScript入門"
+title: "友達用TypeScript入門2 - TypeScript"
 description: "細かい話は省いて、まず書けること・動くものを作れることを重視した入門メモ"
-pubDate: 2026-04-08
+pubDate: 2026-05-11
 tags: [typescript]
 draft: false
 ---
