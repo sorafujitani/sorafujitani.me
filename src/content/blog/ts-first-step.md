@@ -237,6 +237,197 @@ completeTask("1");      // エラー: string は number に割り当てられな
 
 JavaScriptだと前者は `addTsk is not defined` として実行時にクラッシュ、後者は `id` の比較が壊れたまま動き続ける。TypeScriptはどちらもコードを書いた時点で検出する。
 
+## 動くものをテストする: vitest
+
+ここまでで作ったタスク管理ツールは、毎回 `bun run index.ts` を叩いて `console.log` を目視で読むことでしか確認できない。「タスクが本当に追加されたか」「`completeTask` で `done` が `true` になっているか」を、コードで検証してワンコマンドで一覧できるようにしておきたい。それが **テスト** の役割。
+
+ここでは `vitest` という定番のテストランナーを使う。BunのプロジェクトでもそのままTypeScriptで動く。
+
+### 関数を別ファイルから呼べるようにする
+
+今の `index.ts` は「関数の定義」と「関数の呼び出し（実行例）」が同じファイルに同居している。テストファイルから関数を呼ぶには、関数を **別ファイルから読み込める形** にしておく必要がある。
+
+ロジックを `tasks.ts` に切り出して、`index.ts` はそれを使うだけにする。
+
+```ts
+// tasks.ts
+export interface Task {
+  id: number;
+  title: string;
+  done: boolean;
+}
+
+export const tasks: Task[] = [];
+let nextId = 1;
+
+export function addTask(title: string): void {
+  tasks.push({ id: nextId++, title, done: false });
+}
+
+export function completeTask(id: number): void {
+  const task = tasks.find((t) => t.id === id);
+  if (task !== undefined) {
+    task.done = true;
+  }
+}
+
+export function listTasks(): void {
+  for (const task of tasks) {
+    const mark = task.done ? "✓" : " ";
+    console.log(`[${mark}] ${task.title}`);
+  }
+}
+
+// テストごとに状態を初期化したい時用
+export function resetTasks(): void {
+  tasks.length = 0;
+  nextId = 1;
+}
+```
+
+```ts
+// index.ts
+import { addTask, completeTask, listTasks } from "./tasks";
+
+addTask("TypeScriptを学ぶ");
+addTask("ブログ記事を書く");
+addTask("散歩に行く");
+
+completeTask(1);
+
+listTasks();
+```
+
+`export` は「このファイルから外に出す」、`import` は「他のファイルから取り込む」宣言。詳しくは次回（Hono編）で改めて触れるので、今は「テストファイルから関数を呼ぶための準備」と捉えてくれればOK。
+
+この時点で `bun run index.ts` の出力は前と同じはず。挙動は変えていない。
+
+### vitest を入れる
+
+```bash
+bun add -D vitest
+```
+
+`-D` は **開発時にしか使わない依存** を意味するフラグ。本番ビルドには含めない `devDependencies` に入る。テストランナーは開発時にしか動かさないのでここに入れる。
+
+### テストを書く
+
+`tasks.test.ts` を作る。vitest はファイル名の末尾が `.test.ts` (または `.spec.ts`) のファイルを自動でテストとして拾ってくれる。
+
+```ts
+// tasks.test.ts
+import { describe, it, expect, beforeEach } from "vitest";
+import { tasks, addTask, completeTask, resetTasks } from "./tasks";
+
+describe("tasks", () => {
+  beforeEach(() => {
+    resetTasks(); // 前のテストで足したタスクが残らないようにする
+  });
+
+  it("addTask で配列にタスクが増える", () => {
+    addTask("買い物");
+    expect(tasks.length).toBe(1);
+    expect(tasks[0].title).toBe("買い物");
+    expect(tasks[0].done).toBe(false);
+  });
+
+  it("addTask は id を 1 から連番で振る", () => {
+    addTask("a");
+    addTask("b");
+    expect(tasks[0].id).toBe(1);
+    expect(tasks[1].id).toBe(2);
+  });
+
+  it("completeTask で対応するタスクの done が true になる", () => {
+    addTask("掃除");
+    completeTask(1);
+    expect(tasks[0].done).toBe(true);
+  });
+
+  it("存在しない id を completeTask しても落ちない", () => {
+    addTask("洗濯");
+    completeTask(999);
+    expect(tasks[0].done).toBe(false);
+  });
+});
+```
+
+主要な部品を1つずつ。
+
+- `describe(name, fn)`: 関連するテストをまとめるブロック。出力が読みやすくなる。
+- `it(name, fn)`: テスト1ケース。`test` でも同じ意味。
+- `expect(value).toBe(...)`: 期待値と一致するか検証する。`toBe` は厳密等価（`===`）。オブジェクトや配列の中身を比較したい時は `toEqual` を使う。
+- `beforeEach(fn)`: 各 `it` の前に毎回呼ばれるフック。`tasks` のような **状態を持つコード** をテストするときは「テストごとに状態をリセット」が定番。これを怠ると、前のテストで足したタスクが次のテストに残って、テストが順序依存になってしまう。
+
+### 実行する
+
+```bash
+bun x vitest
+```
+
+`bun x` は **インストール済みパッケージのコマンドを実行** する。`vitest` はファイル変更を監視して自動で再実行するwatchモードで立ち上がる。1回だけ走らせたい時は `bun x vitest run`。
+
+```
+ ✓ tasks.test.ts (4)
+   ✓ tasks (4)
+     ✓ addTask で配列にタスクが増える
+     ✓ addTask は id を 1 から連番で振る
+     ✓ completeTask で対応するタスクの done が true になる
+     ✓ 存在しない id を completeTask しても落ちない
+
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+```
+
+全部 ✓ になれば成功。
+
+### わざと壊して赤を見る
+
+テストが赤くなる体験もしておくと感覚が掴める。`tasks.ts` の `completeTask` をわざと壊す。
+
+```ts
+export function completeTask(id: number): void {
+  const task = tasks.find((t) => t.id === id);
+  if (task !== undefined) {
+    task.done = false; // ← わざと true ではなく false にしてみる
+  }
+}
+```
+
+watchモードのままなので、保存すると即座に再実行されて、
+
+```
+ ❯ tasks.test.ts (4)
+   ❯ tasks (4)
+     ✓ addTask で配列にタスクが増える
+     ✓ addTask は id を 1 から連番で振る
+     ✗ completeTask で対応するタスクの done が true になる
+       AssertionError: expected false to be true
+     ✓ 存在しない id を completeTask しても落ちない
+```
+
+「どのテストが」「何を期待していて」「実際は何だったか」が一目でわかる。修正して保存すれば即座に緑に戻る。テストがあると、壊した瞬間に気づけるし、直した瞬間に確認できる。
+
+### package.json に script を足しておく
+
+毎回 `bun x vitest` を手で打つのは面倒なので、`package.json` の `scripts` に登録しておく。
+
+```json
+{
+  "scripts": {
+    "test": "vitest",
+    "test:run": "vitest run"
+  }
+}
+```
+
+```bash
+bun run test       # watchモード
+bun run test:run   # 1回だけ走らせて終わる（CIや「サクッと全部通るか確認」向け）
+```
+
+ここまで来ると、開発中は別ターミナルで `bun run test` を立ち上げっぱなしにしておいて、コードを書きながらテストが緑のままか見続ける、という流れになる。これがTypeScriptの型チェック（書いた瞬間にエラーがわかる）の **動作レベル版**。型では拾えない「ロジックが意図通り動くか」をテストでカバーする、という分担になる。
+
 ## 今回触れなかったこと
 
 - `generic`（`Array<T>` の書き方）
