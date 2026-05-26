@@ -6,5 +6,6 @@ export const PULLS_OWN_REPOS: string[] = [
   'sorafujitani/rfmt',
   'sorafujitani/neovimdot',
   'sorafujitani/sorafujitani.me',
+  'sorafujitani/ccsession',
 ];
 export const PULLS_SINCE = '2025-10-04';
