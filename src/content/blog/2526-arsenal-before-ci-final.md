@@ -1,21 +1,21 @@
 ---
-title: "25/26 CL final 直前"
+title: "25/26 CL Final, just before"
 description: ""
 pubDate: 2026-05-30
 tags: []
 draft: false
 ---
 
-Arsenalを10年ほど応援してきて、初めてのChampions League finalになります。
+i've been supporting Arsenal for about ten years, and this is my first ever Champions League final.
 
-結果がどうなったとしても、Premier League 22年ぶりの優勝を含めて、今シーズンの成果は疑い難いものだと思います。
-Premier League championとしてシーズンを終えるか、フットボールの歴史に残るチームになるのか、そういう分岐点となる試合です。
-100点で終わるか、1000点になるのか、みたいな。
+whatever the result turns out to be, I think this season's achievements—including the first Premier League title in 22 years—are beyond question.
+this is the kind of match that becomes a turning point: whether we end the season as Premier League champions, or whether we become a team that goes down in football history.
+it's like the difference between finishing at 100 points or reaching 1000.
 
-正直、勝つ確率は30%ってところでしょうか。
-今シーズンのシティ先含め、対強豪とのビックゲームに勝っているイメージもあまりありません。
-ただ、こういう試合の為に、我慢や挑戦を繰り返し、長いトンネルを潜り抜けてきたわけです。
-CL finalまでくると最高のチームが全てを賭けて戦う試合ですし、あとは運にも左右されると思うので、祈りながら見ておきます。
+honestly, I'd put our chances of winning at about 30%.
+including the games against City this season, I don't really have the impression that we've been winning the big games against top opponents.
+but it's for matches like this that we've endured, kept challenging, and made it through the long tunnel.
+once you reach a CL final, it's a match where the best teams put everything on the line, and from there I think it comes down to luck too—so I'll be watching and praying.
 
 Come On You Gunners
 
