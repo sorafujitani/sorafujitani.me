@@ -1,6 +1,6 @@
 ---
-title: "Project mozumasu fullstackeng"
-description: "プログラミング入門を終えた人向けに、フルスタックエンジニアを目指すための基本を言語に依存しない形でまとめたロードマップ"
+title: "もずます フルスタックエンジニアへの道"
+description: "フルスタックエンジニアになってねロードマップ"
 pubDate: 2026-06-03
 tags: [roadmap]
 draft: false
