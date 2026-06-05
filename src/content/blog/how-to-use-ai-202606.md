@@ -46,9 +46,16 @@ https://zenn.dev/soramarjr/articles/ff6d80f7b524d6
 ## Shell内での工夫
 
 前提として、Terminal操作のコストは重要だと考えている。
-ここが整備されていないことで注意力を削がれたくない。
+ここが整備されていないことで注意力を削がれたりAgent間の行き来をめんどくさくしたくない。
 
-aliasはshellrcではなく、zeno.zshで設定している
+- zoxideでchange directlyを高速化している
+https://github.com/ajeetdsouza/zoxide
+
+- ghq * fzf でディレクトリ全体を簡単に行き来できるようにしている
+
+https://zenn.dev/mozumasu/articles/mozumasu-lazy-git
+
+- aliasはshellrcではなく、zeno.zshで設定している
 
 https://github.com/yuki-yano/zeno.zsh
 
@@ -56,14 +63,6 @@ shell aliasの増加による、組み込みコマンドなどとの競合を避
 
 こういうの
 https://zenn.dev/owayo/articles/6190821ac1dd1e
-
-zoxideでchange directlyを高速化している
-https://github.com/ajeetdsouza/zoxide
-
-ghq * fzf でディレクトリ全体を簡単に行き来できるようにしている
-
-https://zenn.dev/mozumasu/articles/mozumasu-lazy-git
-
 
 ### Agentの完了に気づく
 
