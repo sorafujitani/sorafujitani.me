@@ -18,6 +18,7 @@ draft: false
 基本的に、特別な使い方をしていない。
 Claude Opus 4.8 のプラクティスに沿って進めている。
 それ以上の工夫された使い方やToken削減のための何かなどはあまりやっていない。
+HarnessAgentとか使っている時もあったが、オーケストレーション用の外付けツールがAgent本体のプラクティスと噛み合わなくなった時にめんどいのでやめた。
 
 https://platform.claude.com/docs/en/about-claude/models/whats-new-claude-4-8
 
@@ -25,7 +26,7 @@ https://platform.claude.com/docs/ja/build-with-claude/prompt-engineering/claude-
 
 https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices
 
----
+https://cursor.com/ja/blog/continually-improving-agent-harness
 
 ## 開発環境
 
@@ -42,7 +43,12 @@ WezTermのWorkspace（Tabみたいなやつ）単位でrepositoryを開き、she
 
 https://zenn.dev/soramarjr/articles/ff6d80f7b524d6
 
-aliasはzeno.zshで設定している
+## Shell内での工夫
+
+前提として、Terminal操作のコストは重要だと考えている。
+ここが整備されていないことで注意力を削がれたくない。
+
+aliasはshellrcではなく、zeno.zshで設定している
 
 https://github.com/yuki-yano/zeno.zsh
 
@@ -50,6 +56,13 @@ shell aliasの増加による、組み込みコマンドなどとの競合を避
 
 こういうの
 https://zenn.dev/owayo/articles/6190821ac1dd1e
+
+zoxideでchange directlyを高速化している
+https://github.com/ajeetdsouza/zoxide
+
+ghq * fzf でディレクトリ全体を簡単に行き来できるようにしている
+
+https://zenn.dev/mozumasu/articles/mozumasu-lazy-git
 
 
 ### Agentの完了に気づく
