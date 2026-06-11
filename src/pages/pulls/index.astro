@@ -1,6 +1,6 @@
 ---
 import BlogLayout from '@layouts/BlogLayout.astro';
-import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS } from '@lib/constants';
+import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULLS_FEATURED_REPOS } from '@lib/constants';
 ---
 
 <BlogLayout title="Pulls" description="GitHub Pull Requests by Sora Fujitani">
@@ -34,7 +34,7 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS } fro
   </div>
 </BlogLayout>
 
-<script define:vars={{ GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS }}>
+<script define:vars={{ GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULLS_FEATURED_REPOS }}>
   const PER_PAGE = 16;
   const CACHE_TTL = 5 * 60 * 1000;
   const BASE_QUERY = `type:pr+author:${GITHUB_USERNAME}+is:public+created:>=${PULLS_SINCE}`;
@@ -161,6 +161,10 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS } fro
   function renderRepoFilters(items) {
     const ownSet = new Set(PULLS_OWN_REPOS);
     const externalRepos = new Map();
+    PULLS_FEATURED_REPOS.forEach((repo) => {
+      const owner = repo.split('/')[0];
+      externalRepos.set(repo, `https://github.com/${owner}.png?size=40`);
+    });
     items.forEach((pr) => {
       const repo = extractRepo(pr.html_url);
       const owner = repo.split('/')[0];
@@ -201,14 +205,23 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS } fro
 
   async function fetchRepos() {
     try {
-      const data = await cachedFetch(`https://api.github.com/search/issues?q=${BASE_QUERY}&per_page=100`);
+      const reposUrl = (page) => `https://api.github.com/search/issues?q=${BASE_QUERY}&sort=created&order=desc&per_page=100&page=${page}`;
+      const first = await cachedFetch(reposUrl(1));
+      const items = [...first.items];
+      const extraPages = Math.min(Math.ceil(first.total_count / 100), 10) - 1;
+      for (let page = 2; page <= extraPages + 1; page++) {
+        const data = await cachedFetch(reposUrl(page));
+        items.push(...data.items);
+      }
       const hiddenSet = new Set(PULLS_HIDDEN_REPOS);
-      const filtered = data.items.filter((pr) => {
+      const filtered = items.filter((pr) => {
         const repo = extractRepo(pr.html_url);
         return !hiddenSet.has(repo) && prStatus(pr) !== 'closed';
       });
       renderRepoFilters(filtered);
-    } catch {}
+    } catch {
+      renderRepoFilters([]);
+    }
   }
 
   async function fetchPulls(page) {

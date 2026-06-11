@@ -36,8 +36,22 @@ const talksCollection = defineCollection({
   }),
 });
 
+const privateCollection = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/private' }),
+  schema: z.object({
+    title: z.string(),
+    description: z.string(),
+    pubDate: z.coerce.date(),
+    updatedDate: z.coerce.date().optional(),
+    author: z.string().default('Sora Fujitani'),
+    tags: z.array(z.string()).optional(),
+    draft: z.boolean().default(false),
+  }),
+});
+
 export const collections = {
   about: aboutCollection,
   blog: blogCollection,
   talks: talksCollection,
+  private: privateCollection,
 };

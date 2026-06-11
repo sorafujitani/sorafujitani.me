@@ -11,6 +11,29 @@ const GITHUB_PERMALINK_RE =
 const TWEET_URL_RE =
   /^https:\/\/(?:x\.com|twitter\.com)\/[^/]+\/status\/\d+/;
 
+// Some sites (e.g. platform.claude.com) serve og:image with
+// Cross-Origin-Resource-Policy: same-origin, which blocks cross-origin <img>
+// embeds in browsers. Verify at build time that the image is actually usable.
+async function isEmbeddableImage(imageUrl: string): Promise<boolean> {
+  try {
+    let res = await fetch(imageUrl, {
+      method: 'HEAD',
+      signal: AbortSignal.timeout(5000),
+    });
+    if (res.status === 405 || res.status === 501) {
+      res = await fetch(imageUrl, { signal: AbortSignal.timeout(5000) });
+    }
+    if (!res.ok) return false;
+    const corp = res.headers
+      .get('cross-origin-resource-policy')
+      ?.toLowerCase();
+    if (corp === 'same-origin' || corp === 'same-site') return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function escapeHtml(str: string): string {
   return str
     .replace(/&/g, '&amp;')
@@ -78,8 +101,14 @@ export const remarkLinkCard: Plugin<[], Root> = () => {
             }
           }
 
+          if (image && !(await isEmbeddableImage(image))) {
+            image = '';
+          }
+
+          // onerror fallback: hide the image container if the image still
+          // fails to load in the browser (e.g. removed after build time)
           const imageHtml = image
-            ? `<div class="link-card-image"><img src="${escapeHtml(image)}" alt="${escapeHtml(title)}" loading="lazy" /></div>`
+            ? `<div class="link-card-image"><img src="${escapeHtml(image)}" alt="" loading="lazy" onerror="this.parentElement.style.display='none'" /></div>`
             : '';
 
           const descriptionHtml = description
