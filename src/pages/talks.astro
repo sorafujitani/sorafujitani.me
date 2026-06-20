@@ -7,11 +7,29 @@ async function fetchOgImage(url: string): Promise<string | null> {
   try {
     const res = await fetch(url);
     const html = await res.text();
-    const match = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/);
-    return match ? match[1] : null;
+    return getMetaContent(html, 'og:image');
   } catch {
     return null;
   }
+}
+
+function getMetaContent(html: string, key: string): string | null {
+  const metaTags = html.matchAll(/<meta\s+([^>]*?)>/gi);
+
+  for (const tag of metaTags) {
+    const attributes = Object.fromEntries(
+      [...tag[1].matchAll(/([\w:-]+)\s*=\s*(['"])(.*?)\2/g)].map((match) => [
+        match[1].toLowerCase(),
+        match[3],
+      ])
+    );
+
+    if ((attributes.property === key || attributes.name === key) && attributes.content) {
+      return attributes.content;
+    }
+  }
+
+  return null;
 }
 
 // サムネイルを解決（手動指定 > スライドURLからOG画像自動取得）
