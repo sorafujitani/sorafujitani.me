@@ -1,5 +1,6 @@
 // @ts-check
-import { defineConfig } from 'astro/config';
+import { defineConfig, memoryCache } from 'astro/config';
+import { unified } from '@astrojs/markdown-remark';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 import remarkGfm from 'remark-gfm';
@@ -10,19 +11,35 @@ import { remarkTweetEmbed } from './src/lib/remark/tweet-embed.ts';
 import { remarkLinkCard } from './src/lib/remark/link-card.ts';
 import { transformerFilename } from './src/lib/shiki/filename-transformer.ts';
 
+const remarkPlugins = [remarkGfm, remarkBreaks, remarkGithubEmbed, remarkTweetEmbed, remarkLinkCard, remarkCodeFilename];
+const useBundledDev = process.env.ASTRO_VITE_BUNDLED_DEV === '1';
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://sorafujitani.me',
   integrations: [
-    mdx({
-      remarkPlugins: [remarkGfm, remarkBreaks, remarkGithubEmbed, remarkTweetEmbed, remarkLinkCard, remarkCodeFilename],
-    }),
+    mdx(),
     sitemap({
       filter: (page) => !page.includes('/private/'),
     }),
   ],
+  cache: {
+    provider: memoryCache(),
+  },
+  routeRules: {
+    '/blog/[...path]': { maxAge: 300, swr: 60 },
+    '/private/[...path]': { maxAge: 300, swr: 60 },
+  },
+  vite: {
+    css: {
+      transformer: 'lightningcss',
+    },
+    ...(useBundledDev ? { experimental: { bundledDev: true } } : {}),
+  },
   markdown: {
-    remarkPlugins: [remarkGfm, remarkBreaks, remarkGithubEmbed, remarkTweetEmbed, remarkLinkCard, remarkCodeFilename],
+    processor: unified({
+      remarkPlugins,
+    }),
     shikiConfig: {
       theme: {
         name: 'custom-cyan-white-theme',
