@@ -18,14 +18,14 @@ Oxlint eslint-plugin rule implementation というテーマで話します。よ
 
 fujitani soraと言います。
 TSKaigiには2年前から運営として関わっています。
-この前の懇親会でイベントのスピーカーを探していたSmartHRのいなおさんに捕まって、今日は運営枠でセッションを担当させていただきます。
+この前の懇親会でこのイベントのスピーカーを探していたSmartHRのいなおさんに捕まって、今日は運営枠でセッションを担当させていただきます。
 
 Oxlintというのは、TypeScriptやJavaScriptのlintを高速に実行するソフトウェアです。
 TSKaigiのセッションでもよく取り上げられていて、名前を聞いたり使い始めた人もいるんじゃないかなと思います。
 自分もOxc toolchainは大好きなソフトウェアで、最近はcontributorとして開発に参加しています。
 
-話のテーマになりますが、Oxlintには、ESLintのlint ruleと同じ名前と挙動で実装されるlint ruleたちと、その移行計画のissueが存在します。
-最近は自分がnode/prefer-global-consoleの移行PRを実装していて、これを例にOxlintの実装概要について話します。
+話のテーマになりますが、Oxlintには、ESLintのlint ruleと同じ名前と挙動で実装されるlint ruleと、その移行計画のissueが存在します。
+この中で、自分が最近実装しているnode/prefer-global-consoleの移行PRを実装していて、これを例にOxlintの実装概要について話します。
 
 node/prefer-global-consoleは、一言で言うと consoleの使い方を揃えるためのルールです。
 JavaScriptではconsoleというオブジェクトはグローバルに使用することもできれば、node:console moduleから明示的にimportして使用することもできます。
@@ -33,7 +33,6 @@ JavaScriptではconsoleというオブジェクトはグローバルに使用す
 このルールを有効化することで、console moduleのimportをlint errorとし、グローバルなconsoleオブジェクトの利用を強制することができます。
 現在JavaScriptを書いている人にとってはとても自然な構文だと思います。
 
-下の例を見てみましょう。
 覚えているかわかりませんが、commonjsというものもあって、requireによるmodule importの検査にも対応しています。
 
 これらのOxlintが提供するlint ruleは、oxlintrc.jsonからの設定で有効化することができます。
