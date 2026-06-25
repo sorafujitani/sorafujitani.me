@@ -1,5 +1,5 @@
 ---
-title: "speakernote-oxlint-test-toolchain-summary"
+title: "SpeakerNote: oxlint-test-toolchain-summary"
 description: ""
 pubDate: 2026-06-24
 tags: []
