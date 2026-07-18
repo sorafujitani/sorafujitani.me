@@ -2,7 +2,7 @@
 title: "SpeakerNote: oxlint-test-toolchain-summary"
 description: ""
 pubDate: 2026-06-24
-tags: [#speakernote, #typescript]
+tags: [speakernote, typescript]
 draft: false
 ---
 
