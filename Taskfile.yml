@@ -13,7 +13,8 @@ tasks:
     desc: Preview production build
     cmd: bun run astro preview
 
-  post:
+  new-post:
+    aliases: [post]
     desc: Create a new blog post
     cmd: bun run scripts/new-post.ts {{.CLI_ARGS}}
 
