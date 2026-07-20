@@ -103,8 +103,8 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
     if (isPullRequest(item)) {
       return itemStatus(item) !== 'closed';
     }
-    // Issues: only on repos owned by others, open only
-    return owner !== GITHUB_USERNAME && item.state === 'open';
+    // Issues: only on repos owned by others (open and closed)
+    return owner !== GITHUB_USERNAME;
   }
 
   function renderCard(item) {
