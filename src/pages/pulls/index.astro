@@ -3,10 +3,10 @@ import BlogLayout from '@layouts/BlogLayout.astro';
 import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULLS_FEATURED_REPOS } from '@lib/constants';
 ---
 
-<BlogLayout title="Pulls" description="GitHub Pull Requests by Sora Fujitani">
+<BlogLayout title="Pulls" description="GitHub Pull Requests and Issues by Sora Fujitani">
   <div class="pulls-container">
     <h1>Pulls</h1>
-    <p class="description">Public GitHub Pull Requests. <span class="since">since 2025-10</span></p>
+    <p class="description">Public GitHub Pull Requests &amp; Issues. <span class="since">since 2025-10</span></p>
 
     <div id="repos-filter" class="repos-filter" style="display:none;"></div>
 
@@ -37,16 +37,14 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
 <script define:vars={{ GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULLS_FEATURED_REPOS }}>
   const PER_PAGE = 16;
   const CACHE_TTL = 5 * 60 * 1000;
-  const BASE_QUERY = `type:pr+author:${GITHUB_USERNAME}+is:public+created:>=${PULLS_SINCE}`;
+  const PR_QUERY = `type:pr+author:${GITHUB_USERNAME}+is:public+created:>=${PULLS_SINCE}`;
+  // Issues filed on repos owned by others (GitHub Search has no qualifier OR)
+  const ISSUE_QUERY = `type:issue+author:${GITHUB_USERNAME}+is:public+created:>=${PULLS_SINCE}+-user:${GITHUB_USERNAME}`;
   let currentPage = 1;
   let totalPages = 1;
   let activeRepo = null;
-
-  function buildUrl(page) {
-    let q = BASE_QUERY;
-    if (activeRepo) q += `+repo:${activeRepo}`;
-    return `https://api.github.com/search/issues?q=${q}&sort=created&order=desc&per_page=${PER_PAGE}&page=${page}`;
-  }
+  let allItemsPromise = null;
+  let filtersRendered = false;
 
   function cacheGet(key) {
     try {
@@ -73,46 +71,47 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
     return data;
   }
 
-  function relativeTime(dateStr) {
-    const now = Date.now();
-    const diff = now - new Date(dateStr).getTime();
-    const sec = Math.floor(diff / 1000);
-    const min = Math.floor(sec / 60);
-    const hour = Math.floor(min / 60);
-    const day = Math.floor(hour / 24);
-    const month = Math.floor(day / 30);
-    const year = Math.floor(day / 365);
-
-    if (year > 0) return `${year}年前`;
-    if (month > 0) return `${month}ヶ月前`;
-    if (day > 0) return `${day}日前`;
-    if (hour > 0) return `${hour}時間前`;
-    if (min > 0) return `${min}分前`;
-    return 'たった今';
-  }
-
   function extractRepo(htmlUrl) {
     const m = htmlUrl.match(/github\.com\/([^/]+\/[^/]+)\//);
     return m ? m[1] : '';
   }
 
-  function prStatus(pr) {
-    if (pr.pull_request?.merged_at) return 'merged';
-    if (pr.state === 'open') return 'open';
-    return 'closed';
+  function isPullRequest(item) {
+    return !!item.pull_request;
+  }
+
+  function itemStatus(item) {
+    if (isPullRequest(item)) {
+      if (item.pull_request?.merged_at) return 'merged';
+      if (item.state === 'open') return 'open';
+      return 'closed';
+    }
+    return item.state === 'open' ? 'issue' : 'closed';
   }
 
   function statusLabel(status) {
     if (status === 'merged') return 'Merged';
     if (status === 'open') return 'Open';
+    if (status === 'issue') return 'Issue';
     return 'Closed';
   }
 
-  function renderCard(pr) {
-    const repo = extractRepo(pr.html_url);
+  function shouldShowItem(item) {
+    const repo = extractRepo(item.html_url);
+    if (!repo) return false;
     const owner = repo.split('/')[0];
-    const status = prStatus(pr);
-    const number = pr.number;
+    if (isPullRequest(item)) {
+      return itemStatus(item) !== 'closed';
+    }
+    // Issues: only on repos owned by others, open only
+    return owner !== GITHUB_USERNAME && item.state === 'open';
+  }
+
+  function renderCard(item) {
+    const repo = extractRepo(item.html_url);
+    const owner = repo.split('/')[0];
+    const status = itemStatus(item);
+    const number = item.number;
     const avatarUrl = `https://github.com/${owner}.png?size=40`;
 
     const card = document.createElement('article');
@@ -124,8 +123,8 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
         <a href="https://github.com/${repo}" target="_blank" rel="noopener noreferrer" class="pr-repo">${repo}</a>
         <span class="pr-badge pr-badge--${status}">${statusLabel(status)}</span>
       </div>
-      <a href="${pr.html_url}" target="_blank" rel="noopener noreferrer" class="pr-title">
-        ${pr.title} <span class="pr-number">#${number}</span>
+      <a href="${item.html_url}" target="_blank" rel="noopener noreferrer" class="pr-title">
+        ${item.title} <span class="pr-number">#${number}</span>
       </a>
     `;
 
@@ -165,8 +164,8 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
       const owner = repo.split('/')[0];
       externalRepos.set(repo, `https://github.com/${owner}.png?size=40`);
     });
-    items.forEach((pr) => {
-      const repo = extractRepo(pr.html_url);
+    items.forEach((item) => {
+      const repo = extractRepo(item.html_url);
       const owner = repo.split('/')[0];
       if (!ownSet.has(repo) && owner !== GITHUB_USERNAME && !externalRepos.has(repo)) {
         externalRepos.set(repo, `https://github.com/${owner}.png?size=40`);
@@ -177,7 +176,7 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
     container.innerHTML = '';
 
     const allBtn = document.createElement('button');
-    allBtn.className = 'repo-filter-btn active';
+    allBtn.className = 'repo-filter-btn' + (activeRepo ? '' : ' active');
     allBtn.dataset.repo = '';
     allBtn.textContent = 'All';
     container.appendChild(allBtn);
@@ -185,7 +184,7 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
     PULLS_OWN_REPOS.forEach((repo) => {
       const owner = repo.split('/')[0];
       const btn = document.createElement('button');
-      btn.className = 'repo-filter-btn';
+      btn.className = 'repo-filter-btn' + (activeRepo === repo ? ' active' : '');
       btn.dataset.repo = repo;
       btn.innerHTML = `<img src="https://github.com/${owner}.png?size=40" alt="" width="16" height="16" class="repo-filter-icon" loading="lazy" />${repo}`;
       container.appendChild(btn);
@@ -194,34 +193,52 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
     const sorted = [...externalRepos.entries()].sort((a, b) => a[0].localeCompare(b[0]));
     sorted.forEach(([repo, avatarUrl]) => {
       const btn = document.createElement('button');
-      btn.className = 'repo-filter-btn';
+      btn.className = 'repo-filter-btn' + (activeRepo === repo ? ' active' : '');
       btn.dataset.repo = repo;
       btn.innerHTML = `<img src="${avatarUrl}" alt="" width="16" height="16" class="repo-filter-icon" loading="lazy" />${repo}`;
       container.appendChild(btn);
     });
 
     container.style.display = '';
+    filtersRendered = true;
   }
 
-  async function fetchRepos() {
-    try {
-      const reposUrl = (page) => `https://api.github.com/search/issues?q=${BASE_QUERY}&sort=created&order=desc&per_page=100&page=${page}`;
-      const first = await cachedFetch(reposUrl(1));
-      const items = [...first.items];
-      const extraPages = Math.min(Math.ceil(first.total_count / 100), 10) - 1;
-      for (let page = 2; page <= extraPages + 1; page++) {
-        const data = await cachedFetch(reposUrl(page));
-        items.push(...data.items);
-      }
-      const hiddenSet = new Set(PULLS_HIDDEN_REPOS);
-      const filtered = items.filter((pr) => {
-        const repo = extractRepo(pr.html_url);
-        return !hiddenSet.has(repo) && prStatus(pr) !== 'closed';
-      });
-      renderRepoFilters(filtered);
-    } catch {
-      renderRepoFilters([]);
+  async function fetchAllSearchPages(query) {
+    const url = (page) =>
+      `https://api.github.com/search/issues?q=${query}&sort=created&order=desc&per_page=100&page=${page}`;
+    const first = await cachedFetch(url(1));
+    const items = [...(first.items || [])];
+    const extraPages = Math.min(Math.ceil((first.total_count || 0) / 100), 10) - 1;
+    for (let page = 2; page <= extraPages + 1; page++) {
+      const data = await cachedFetch(url(page));
+      items.push(...(data.items || []));
     }
+    return items;
+  }
+
+  async function loadAllItems() {
+    if (!allItemsPromise) {
+      allItemsPromise = (async () => {
+        const [prs, issues] = await Promise.all([
+          fetchAllSearchPages(PR_QUERY),
+          fetchAllSearchPages(ISSUE_QUERY),
+        ]);
+        const hiddenSet = new Set(PULLS_HIDDEN_REPOS);
+        const seen = new Set();
+        const merged = [...prs, ...issues].filter((item) => {
+          if (seen.has(item.id)) return false;
+          seen.add(item.id);
+          const repo = extractRepo(item.html_url);
+          return !hiddenSet.has(repo) && shouldShowItem(item);
+        });
+        merged.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        return merged;
+      })().catch((e) => {
+        allItemsPromise = null;
+        throw e;
+      });
+    }
+    return allItemsPromise;
   }
 
   async function fetchPulls(page) {
@@ -237,20 +254,21 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
     pagination.style.display = 'none';
 
     try {
-      const data = await cachedFetch(buildUrl(currentPage));
+      const all = await loadAllItems();
+      if (!filtersRendered) renderRepoFilters(all);
 
-      const hiddenSet = new Set(PULLS_HIDDEN_REPOS);
-      const items = data.items.filter((pr) => {
-        const repo = extractRepo(pr.html_url);
-        return !hiddenSet.has(repo) && prStatus(pr) !== 'closed';
-      });
+      const filtered = activeRepo
+        ? all.filter((item) => extractRepo(item.html_url) === activeRepo)
+        : all;
+      const start = (currentPage - 1) * PER_PAGE;
+      const items = filtered.slice(start, start + PER_PAGE);
 
       list.innerHTML = '';
-      items.forEach((pr) => list.appendChild(renderCard(pr)));
+      items.forEach((item) => list.appendChild(renderCard(item)));
 
       loading.style.display = 'none';
       list.style.display = '';
-      updatePagination(currentPage, data.total_count);
+      updatePagination(currentPage, filtered.length);
 
       if (currentPage > 1) window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (e) {
@@ -279,7 +297,7 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
     fetchPulls(1);
   });
 
-  fetchPulls(1).then(() => fetchRepos());
+  fetchPulls(1);
 </script>
 
 <style>
@@ -483,6 +501,11 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
   #pulls-list :global(.pr-badge--closed) {
     background: rgba(248, 81, 73, 0.15);
     color: #f85149;
+  }
+
+  #pulls-list :global(.pr-badge--issue) {
+    background: rgba(0, 216, 255, 0.12);
+    color: var(--color-accent);
   }
 
   #pulls-list :global(.pr-title) {
