@@ -2,6 +2,11 @@ export const SITE_URL = 'https://sorafujitani.me';
 export const SITE_NAME = 'Sora Fujitani';
 export const GITHUB_USERNAME = 'sorafujitani';
 export const PULLS_HIDDEN_REPOS: string[] = [];
+/** Repos whose Issues are hidden on /pulls (PRs are still shown) */
+export const PULLS_HIDDEN_ISSUE_REPOS: string[] = [
+  'nikic/PHP-Parser',
+  'mozumasu/linear-time-attack',
+];
 export const PULLS_OWN_REPOS: string[] = [
   'sorafujitani/rfmt',
   'sorafujitani/ccsession',
