@@ -1,6 +1,6 @@
 ---
 import BlogLayout from '@layouts/BlogLayout.astro';
-import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULLS_FEATURED_REPOS } from '@lib/constants';
+import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_HIDDEN_ISSUE_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULLS_FEATURED_REPOS } from '@lib/constants';
 ---
 
 <BlogLayout title="Pulls" description="GitHub Pull Requests and Issues by Sora Fujitani">
@@ -34,12 +34,15 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
   </div>
 </BlogLayout>
 
-<script define:vars={{ GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULLS_FEATURED_REPOS }}>
+<script define:vars={{ GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_HIDDEN_ISSUE_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULLS_FEATURED_REPOS }}>
   const PER_PAGE = 16;
   const CACHE_TTL = 5 * 60 * 1000;
   const PR_QUERY = `type:pr+author:${GITHUB_USERNAME}+is:public+created:>=${PULLS_SINCE}`;
   // Issues filed on repos owned by others (GitHub Search has no qualifier OR)
   const ISSUE_QUERY = `type:issue+author:${GITHUB_USERNAME}+is:public+created:>=${PULLS_SINCE}+-user:${GITHUB_USERNAME}`;
+  const hiddenIssueRepos = new Set(
+    PULLS_HIDDEN_ISSUE_REPOS.map((repo) => repo.toLowerCase()),
+  );
   let currentPage = 1;
   let totalPages = 1;
   let activeRepo = null;
@@ -104,7 +107,9 @@ import { GITHUB_USERNAME, PULLS_HIDDEN_REPOS, PULLS_SINCE, PULLS_OWN_REPOS, PULL
       return itemStatus(item) !== 'closed';
     }
     // Issues: only on repos owned by others (open and closed)
-    return owner !== GITHUB_USERNAME;
+    if (owner === GITHUB_USERNAME) return false;
+    if (hiddenIssueRepos.has(repo.toLowerCase())) return false;
+    return true;
   }
 
   function renderCard(item) {
