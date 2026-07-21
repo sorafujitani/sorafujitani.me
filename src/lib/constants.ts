@@ -1,7 +1,9 @@
 export const SITE_URL = 'https://sorafujitani.me';
 export const SITE_NAME = 'Sora Fujitani';
 export const GITHUB_USERNAME = 'sorafujitani';
-export const PULLS_HIDDEN_REPOS: string[] = [];
+export const PULLS_HIDDEN_REPOS: string[] = [
+  'sorafujitani/sorafujitani.me',
+];
 /** Repos whose Issues are hidden on /pulls (PRs are still shown) */
 export const PULLS_HIDDEN_ISSUE_REPOS: string[] = [
   'nikic/PHP-Parser',
