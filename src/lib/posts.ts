@@ -2,6 +2,9 @@ import { getCollection } from 'astro:content';
 
 const ZENN_USERNAME = 'soramarjr';
 const NOTE_USERNAME = 'sorafujitani';
+const MIGRATED_ZENN_ARTICLE_SLUGS = new Set([
+  '3e56c0f072170e',
+]);
 
 // External API protection: Search.astro inside BlogLayout calls getPublishedPosts()
 // once per built page (~36×), so collapse the whole build to a single fetch via
@@ -75,15 +78,17 @@ async function fetchZennArticles(): Promise<Post[]> {
     console.warn('Failed to fetch Zenn articles');
   }
 
-  return articles.map(article => ({
-    data: {
-      title: article.title,
-      description: '',
-      pubDate: new Date(article.published_at),
-      externalUrl: `https://zenn.dev${article.path}`,
-    },
-    slug: `zenn-${article.slug}`,
-  }));
+  return articles
+    .filter(article => !MIGRATED_ZENN_ARTICLE_SLUGS.has(article.slug))
+    .map(article => ({
+      data: {
+        title: article.title,
+        description: '',
+        pubDate: new Date(article.published_at),
+        externalUrl: `https://zenn.dev${article.path}`,
+      },
+      slug: `zenn-${article.slug}`,
+    }));
 }
 
 async function fetchNoteArticles(): Promise<Post[]> {
