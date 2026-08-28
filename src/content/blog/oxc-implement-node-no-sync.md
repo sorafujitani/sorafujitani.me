@@ -1,6 +1,6 @@
 ---
 title: "OxlintのESLint互換ルールを実装する"
-description: "OxlintにESLint互換ルールを実装した経験をもとに、ASTの探索方法やテストの実行方法を解説します。"
+description: ""
 pubDate: 2026-08-25
 tags: [Rust, TypeScript, lint, OSS, Oxc]
 draft: false
